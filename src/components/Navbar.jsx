@@ -34,6 +34,12 @@ const Navbar = () => {
         </form>
 
         <nav className="nav-links desktop-only">
+          <Link to="/about" className="nav-link">About</Link>
+          <Link to="/collections" className="nav-link">Discover</Link>
+          <Link to="/events" className="nav-link">Events</Link>
+          <Link to="/advertise" className="nav-link">Advertise</Link>
+          <Link to="/claim-business" className="nav-link">Zelp for Businesses</Link>
+          <div className="nav-divider"></div>
           <Link to="/write-review" className="nav-link">Write a Review</Link>
           <Link to="/login" className="btn btn-secondary">Log In</Link>
           <Link to="/signup" className="btn btn-primary">Sign Up</Link>
@@ -54,6 +60,11 @@ const Navbar = () => {
             <input type="text" placeholder="Harare, ZW" className="mobile-input" />
             <button type="submit" className="btn btn-primary w-full">Search</button>
           </form>
+          <Link to="/about" className="mobile-link">About</Link>
+          <Link to="/collections" className="mobile-link">Discover</Link>
+          <Link to="/events" className="mobile-link">Events</Link>
+          <Link to="/advertise" className="mobile-link">Advertise</Link>
+          <Link to="/claim-business" className="mobile-link">Zelp for Businesses</Link>
           <Link to="/write-review" className="mobile-link">Write a Review</Link>
           <Link to="/login" className="mobile-link">Log In</Link>
           <Link to="/signup" className="mobile-link">Sign Up</Link>

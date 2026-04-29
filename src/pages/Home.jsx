@@ -1,29 +1,36 @@
 import { Link } from 'react-router-dom';
 import { Utensils, Wrench, Car, MoreHorizontal, Star } from 'lucide-react';
+import HeroSlideshow from '../components/HeroSlideshow';
 import './Home.css';
+
+const homeSlides = [
+  { image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1600&q=80', eyebrow: 'Welcome to Zelp', title: 'Discover Local Favorites', subtitle: 'Find the best restaurants, home services, and more in Zimbabwe.' },
+  { image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1600&q=80', eyebrow: 'Community Driven', title: 'Support Local Business', subtitle: 'Read honest reviews from real people in your neighborhood.' },
+];
 
 const Home = () => {
   return (
     <div className="home">
-      <section className="hero">
-        <div className="container hero-container">
-          <h1 className="hero-title">Zelp, tailored for Zimbabwe</h1>
+      <HeroSlideshow slides={homeSlides} />
+
+      <section className="categories-section" style={{ padding: '40px 0', background: 'var(--primary-white)' }}>
+        <div className="container">
           <div className="categories-grid">
             <Link to="/search?q=restaurants" className="category-card hover-lift">
-              <Utensils size={32} />
-              <span>Restaurants</span>
+              <Utensils size={32} color="var(--primary-green)" />
+              <span style={{ marginTop: '8px', fontWeight: 'bold' }}>Restaurants</span>
             </Link>
             <Link to="/search?q=home-services" className="category-card hover-lift">
-              <Wrench size={32} />
-              <span>Home Services</span>
+              <Wrench size={32} color="var(--primary-green)" />
+              <span style={{ marginTop: '8px', fontWeight: 'bold' }}>Home Services</span>
             </Link>
             <Link to="/search?q=auto-services" className="category-card hover-lift">
-              <Car size={32} />
-              <span>Auto Services</span>
+              <Car size={32} color="var(--primary-green)" />
+              <span style={{ marginTop: '8px', fontWeight: 'bold' }}>Auto Services</span>
             </Link>
             <Link to="/search?q=more" className="category-card hover-lift">
-              <MoreHorizontal size={32} />
-              <span>More</span>
+              <MoreHorizontal size={32} color="var(--primary-green)" />
+              <span style={{ marginTop: '8px', fontWeight: 'bold' }}>More</span>
             </Link>
           </div>
         </div>

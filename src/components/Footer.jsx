@@ -9,31 +9,31 @@ const Footer = () => {
           <div className="footer-col">
             <h3>About Zelp</h3>
             <ul>
-              <li><Link to="/">About Us</Link></li>
-              <li><Link to="/">Careers</Link></li>
-              <li><Link to="/">Press</Link></li>
-              <li><Link to="/">Investor Relations</Link></li>
-              <li><Link to="/">Trust & Safety</Link></li>
+              <li><Link to="/about">About Us</Link></li>
+              <li><Link to="/careers">Careers</Link></li>
+              <li><Link to="/press">Press</Link></li>
+              <li><Link to="/investor-relations">Investor Relations</Link></li>
+              <li><Link to="/trust-safety">Trust & Safety</Link></li>
             </ul>
           </div>
           <div className="footer-col">
             <h3>Discover</h3>
             <ul>
-              <li><Link to="/">Zelp Project Cost Guides</Link></li>
-              <li><Link to="/">Collections</Link></li>
-              <li><Link to="/">Talk</Link></li>
-              <li><Link to="/">Events</Link></li>
-              <li><Link to="/">Zelp Blog</Link></li>
+              <li><Link to="/cost-guides">Zelp Project Cost Guides</Link></li>
+              <li><Link to="/collections">Collections</Link></li>
+              <li><Link to="/talk">Talk</Link></li>
+              <li><Link to="/events">Events</Link></li>
+              <li><Link to="/blog">Zelp Blog</Link></li>
             </ul>
           </div>
           <div className="footer-col">
             <h3>Zelp for Business</h3>
             <ul>
-              <li><Link to="/">Claim your Business Page</Link></li>
-              <li><Link to="/">Advertise on Zelp</Link></li>
-              <li><Link to="/">Zelp for Restaurant Owners</Link></li>
-              <li><Link to="/">Business Success Stories</Link></li>
-              <li><Link to="/">Business Support</Link></li>
+              <li><Link to="/claim-business">Claim your Business Page</Link></li>
+              <li><Link to="/advertise">Advertise on Zelp</Link></li>
+              <li><Link to="/restaurant-owners">Zelp for Restaurant Owners</Link></li>
+              <li><Link to="/success-stories">Business Success Stories</Link></li>
+              <li><Link to="/business-support">Business Support</Link></li>
             </ul>
           </div>
           <div className="footer-col">
