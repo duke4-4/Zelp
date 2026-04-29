@@ -1,0 +1,137 @@
+.hero-slideshow {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  overflow: hidden;
+  background: #111;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.hero-slide.active { opacity: 1; }
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.65) 100%);
+}
+
+.hero-text {
+  position: absolute;
+  bottom: 100px;
+  left: 0; right: 0;
+  text-align: center;
+  padding: 0 24px;
+  z-index: 2;
+}
+
+.hero-eyebrow {
+  display: inline-block;
+  background: var(--primary-green);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+
+.hero-heading {
+  font-size: clamp(26px, 5vw, 56px);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 2px 14px rgba(0,0,0,0.5);
+  margin-bottom: 14px;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+
+.hero-sub {
+  font-size: clamp(14px, 2.2vw, 20px);
+  color: rgba(255,255,255,0.87);
+  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+  margin-bottom: 24px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-cta-btn {
+  display: inline-block;
+  background: var(--primary-red);
+  color: #fff;
+  padding: 13px 30px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  transition: all 0.25s ease;
+}
+.hero-cta-btn:hover {
+  background: #c50a04;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+/* Zim flag stripe at bottom */
+.flag-stripe {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 6px;
+  background: linear-gradient(90deg,
+    #000 0% 20%,
+    #FFD200 20% 40%,
+    #00843D 40% 60%,
+    #FFD200 60% 80%,
+    #E3120B 80% 100%
+  );
+  z-index: 5;
+}
+
+/* Arrows */
+.hero-arrow {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.4);
+  color: #fff; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 3;
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.hero-arrow:hover { background: rgba(255,255,255,0.35); }
+.hero-arrow.left { left: 20px; }
+.hero-arrow.right { right: 20px; }
+
+/* Dots */
+.hero-dots {
+  position: absolute;
+  bottom: 22px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 9px; z-index: 4;
+}
+.hero-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(255,255,255,0.45);
+  border: none; cursor: pointer; transition: all 0.3s;
+}
+.hero-dot.active {
+  background: var(--primary-yellow);
+  width: 28px; border-radius: 5px;
+}
+
+@media (max-width: 600px) {
+  .hero-slideshow { height: 340px; }
+  .hero-text { bottom: 68px; }
+  .hero-arrow { width: 36px; height: 36px; font-size: 16px; }
+}
