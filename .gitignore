@@ -12,6 +12,16 @@ dist
 dist-ssr
 *.local
 
+# Nuxt
+.nuxt
+.output
+.data
+
+# Env files (keep .env.example)
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
