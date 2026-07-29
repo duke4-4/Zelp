@@ -79,16 +79,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto flex min-h-[calc(100vh-16rem)] max-w-md flex-col justify-center gap-6 px-4 py-12">
+  <div class="mx-auto flex min-h-[calc(100vh-16rem)] max-w-md flex-col justify-center gap-6 px-5 py-12">
     <div class="text-center">
-      <h1 class="text-2xl font-bold">
+      <h1 class="text-2xl font-semibold">
         Choose a new password
       </h1>
     </div>
 
     <template v-if="status === 'checking'">
       <div class="flex justify-center py-8">
-        <UIcon name="i-lucide-loader-2" class="text-muted size-6 animate-spin" />
+        <UIcon name="i-lucide-loader-2" class="text-ink-faint size-6 animate-spin" />
       </div>
     </template>
 

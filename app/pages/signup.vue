@@ -59,14 +59,23 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
 </script>
 
 <template>
-  <div class="mx-auto flex min-h-[calc(100vh-16rem)] max-w-md flex-col justify-center gap-6 px-4 py-12">
+  <div class="mx-auto flex min-h-[calc(100vh-16rem)] max-w-md flex-col justify-center gap-6 px-5 py-12">
+    <!-- Chevron frieze — subtle top band, same sanctioned use as /login. -->
+    <div class="h-5 w-full overflow-hidden rounded-full opacity-80" aria-hidden="true">
+      <img
+        src="/brand/zelp-pattern-chevron.svg"
+        alt=""
+        class="h-full w-full object-cover"
+      >
+    </div>
+
     <div class="text-center">
-      <h1 class="text-2xl font-bold">
+      <h1 class="text-2xl font-semibold">
         Create your Zelp account
       </h1>
-      <p class="text-muted mt-1 text-sm">
+      <p class="text-ink-muted mt-1 text-sm">
         Already have an account?
-        <ULink to="/login" class="text-primary font-medium">
+        <ULink to="/login" class="text-flame-500 font-medium">
           Log in
         </ULink>
       </p>

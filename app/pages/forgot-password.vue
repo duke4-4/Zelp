@@ -41,12 +41,12 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
 </script>
 
 <template>
-  <div class="mx-auto flex min-h-[calc(100vh-16rem)] max-w-md flex-col justify-center gap-6 px-4 py-12">
+  <div class="mx-auto flex min-h-[calc(100vh-16rem)] max-w-md flex-col justify-center gap-6 px-5 py-12">
     <div class="text-center">
-      <h1 class="text-2xl font-bold">
+      <h1 class="text-2xl font-semibold">
         Reset your password
       </h1>
-      <p class="text-muted mt-1 text-sm">
+      <p class="text-ink-muted mt-1 text-sm">
         We'll email you a link to reset it.
       </p>
     </div>
@@ -83,7 +83,7 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
     </UForm>
 
     <p class="text-center text-sm">
-      <ULink to="/login" class="text-primary font-medium">
+      <ULink to="/login" class="text-flame-500 font-medium">
         Back to log in
       </ULink>
     </p>

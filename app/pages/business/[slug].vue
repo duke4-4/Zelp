@@ -92,16 +92,16 @@ useSeoMeta({
 </script>
 
 <template>
-  <div v-if="business" class="mx-auto max-w-5xl px-4 py-8">
+  <div v-if="business" class="mx-auto max-w-5xl px-5 py-8">
     <!-- Header -->
-    <div class="mb-8 flex flex-col gap-3">
+    <div class="mb-6 flex flex-col gap-3">
       <div class="flex flex-wrap items-start justify-between gap-3">
-        <h1 class="text-3xl font-bold">
+        <h1 class="text-ink text-[28px] leading-[1.15] font-semibold sm:text-[32px]">
           {{ business.name }}
         </h1>
       </div>
 
-      <div v-if="business.categories.length" class="flex flex-wrap gap-1">
+      <div v-if="business.categories.length" class="flex flex-wrap gap-1.5">
         <UBadge
           v-for="category in business.categories"
           :key="category.id"
@@ -113,17 +113,33 @@ useSeoMeta({
 
       <RatingStars :rating="business.avgRating" size="md" show-value :review-count="business.reviewCount" />
 
-      <p v-if="locationLine" class="text-muted flex items-center gap-1.5">
+      <p v-if="locationLine" class="text-ink-muted flex items-center gap-1.5 text-sm">
         <UIcon name="i-lucide-map-pin" class="size-4 shrink-0" />
         {{ locationLine }}
       </p>
+    </div>
+
+    <!-- Contact action row -->
+    <div v-if="actionRow.length" class="mb-8 flex flex-wrap gap-2">
+      <UButton
+        v-for="action in actionRow"
+        :key="action.label"
+        :to="action.href"
+        :target="action.external ? '_blank' : undefined"
+        :rel="action.external ? 'noopener noreferrer' : undefined"
+        :icon="action.icon"
+        :label="action.label"
+        variant="outline"
+        color="neutral"
+        size="lg"
+      />
     </div>
 
     <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
       <div class="flex flex-col gap-8 md:col-span-2">
         <!-- Photos -->
         <section>
-          <h2 class="mb-3 text-lg font-semibold">
+          <h2 class="text-ink mb-3 text-lg font-semibold">
             Photos
           </h2>
           <ImageGallery :images="business.images" :business-name="business.name" />
@@ -131,13 +147,23 @@ useSeoMeta({
 
         <!-- Description -->
         <section v-if="business.description">
-          <h2 class="mb-2 text-lg font-semibold">
+          <h2 class="text-ink mb-2 text-lg font-semibold">
             About
           </h2>
-          <p class="text-toned whitespace-pre-line">
+          <p class="text-ink-muted whitespace-pre-line">
             {{ business.description }}
           </p>
         </section>
+
+        <!-- Chevron frieze divider — the second of the three sanctioned
+             uses of the brand pattern (docs/zelp-brand-guidelines.md). -->
+        <div class="h-6 w-full overflow-hidden rounded-full" aria-hidden="true">
+          <img
+            src="/brand/zelp-pattern-chevron.svg"
+            alt=""
+            class="h-full w-full object-cover"
+          >
+        </div>
 
         <!--
           Phase 4 hook: ReviewCard / ReviewForm / RatingStars(interactive)
@@ -146,11 +172,11 @@ useSeoMeta({
           `review_count`, which Phase 1's `update_business_rating()` trigger
           keeps in sync — no extra fetch needed once review UI lands.
         -->
-        <section class="border-default border-t pt-6">
-          <h2 class="mb-2 text-lg font-semibold">
+        <section>
+          <h2 class="text-ink mb-2 text-lg font-semibold">
             Reviews ({{ business.reviewCount }})
           </h2>
-          <p class="text-muted text-sm">
+          <p class="text-ink-muted text-sm">
             Review submission is coming soon.
           </p>
         </section>
@@ -158,12 +184,12 @@ useSeoMeta({
 
       <div class="flex flex-col gap-6">
         <!-- Contact -->
-        <section v-if="hasContactInfo" class="border-default rounded-lg border p-4">
-          <h2 class="mb-3 text-lg font-semibold">
+        <section v-if="hasContactInfo" class="rounded-[18px] border border-line p-4">
+          <h2 class="text-ink mb-3 text-lg font-semibold">
             Contact
           </h2>
-          <div class="flex flex-col gap-2 text-sm">
-            <a v-if="contactLinks.phone" :href="`tel:${contactLinks.phone}`" class="hover:text-primary flex items-center gap-2">
+          <div class="flex flex-col gap-2.5 text-sm">
+            <a v-if="contactLinks.phone" :href="`tel:${contactLinks.phone}`" class="text-ink-muted hover:text-flame-500 flex items-center gap-2">
               <UIcon name="i-lucide-phone" class="size-4 shrink-0" />
               {{ contactLinks.phone }}
             </a>
@@ -172,12 +198,12 @@ useSeoMeta({
               :href="normalizeWhatsappHref(contactLinks.whatsapp)"
               target="_blank"
               rel="noopener noreferrer"
-              class="hover:text-primary flex items-center gap-2"
+              class="text-ink-muted hover:text-flame-500 flex items-center gap-2"
             >
               <UIcon name="i-lucide-message-circle" class="size-4 shrink-0" />
               WhatsApp
             </a>
-            <a v-if="contactLinks.email" :href="`mailto:${contactLinks.email}`" class="hover:text-primary flex items-center gap-2">
+            <a v-if="contactLinks.email" :href="`mailto:${contactLinks.email}`" class="text-ink-muted hover:text-flame-500 flex items-center gap-2">
               <UIcon name="i-lucide-mail" class="size-4 shrink-0" />
               {{ contactLinks.email }}
             </a>
@@ -186,7 +212,7 @@ useSeoMeta({
               :href="contactLinks.website"
               target="_blank"
               rel="noopener noreferrer"
-              class="hover:text-primary flex items-center gap-2"
+              class="text-ink-muted hover:text-flame-500 flex items-center gap-2"
             >
               <UIcon name="i-lucide-globe" class="size-4 shrink-0" />
               <span class="truncate">{{ contactLinks.website }}</span>
@@ -195,16 +221,18 @@ useSeoMeta({
         </section>
 
         <!-- Hours -->
-        <section v-if="hoursEntries.length" class="border-default rounded-lg border p-4">
-          <h2 class="mb-3 text-lg font-semibold">
+        <section v-if="hoursEntries.length" class="rounded-[18px] border border-line p-4">
+          <h2 class="text-ink mb-3 text-lg font-semibold">
             Hours
           </h2>
-          <dl class="flex flex-col gap-1 text-sm">
+          <dl class="flex flex-col gap-1.5 text-sm">
             <div v-for="[day, value] in hoursEntries" :key="day" class="flex justify-between gap-4">
-              <dt class="text-muted">
+              <dt class="text-ink-muted">
                 {{ formatDayLabel(day) }}
               </dt>
-              <dd>{{ formatHoursValue(value) }}</dd>
+              <dd class="text-ink tabular-nums">
+                {{ formatHoursValue(value) }}
+              </dd>
             </div>
           </dl>
         </section>
