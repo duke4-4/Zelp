@@ -1,10 +1,11 @@
 <script setup lang="ts">
+const SPLASH_DURATION_MS = 1_200
 const visible = ref(true)
 
 onMounted(() => {
   window.setTimeout(() => {
     visible.value = false
-  }, 450)
+  }, SPLASH_DURATION_MS)
 })
 </script>
 

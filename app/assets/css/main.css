@@ -111,33 +111,10 @@
   --shadow-floating: 0 6px 20px rgba(21, 32, 27, 0.08);
 }
 
-/* Dark mode overrides — Nuxt UI's colour-mode plugin toggles a `.dark`
- * class on the root element; our own semantic tokens follow the same
- * convention so `bg-stone`, `text-ink`, etc. flip automatically. Brand
- * colours registered via `ui.colors` in app.config.ts already get a
- * lighter shade in dark mode from Nuxt UI itself (it swaps to the 400
- * step), which is why flame-400 above is set to the brief's dark-mode
- * "lifted" flame (#E8663F) — gold stays close to its light-mode value by
- * design ("gold stays").
- */
-.dark {
-  --color-ink: #f7f1e7;
-  --color-ink-muted: #b9c2bb;
-  --color-ink-faint: #8a938e;
-  --color-stone: #121916;
-  --color-surface: #1b2420;
-  --color-line: #2a342e;
-
-  --ui-bg: #1b2420;
-  --ui-bg-elevated: #232f29;
-  --ui-bg-accented: #2a342e;
-  --ui-border: #2a342e;
-  --ui-border-muted: #2a342e;
-}
-
 @layer base {
   html {
     font-variant-numeric: normal;
+    color-scheme: light;
   }
 
   body {
