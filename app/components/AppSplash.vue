@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const SPLASH_DURATION_MS = 1_200
+const SPLASH_DURATION_MS = 1_300
 const visible = ref(true)
 
 onMounted(() => {
