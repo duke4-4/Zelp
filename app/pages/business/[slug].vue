@@ -1,0 +1,196 @@
+<script setup lang="ts">
+// Business detail page.
+//
+// Note on loading state: unlike the homepage/search (which use lazy
+// fetching + a skeleton), this page `await`s its data directly in `setup`
+// so Nuxt blocks SSR until the business is resolved. That's required to
+// throw a real HTTP 404 (correct status code for crawlers/bots) when the
+// slug doesn't exist or isn't visible under RLS — a `lazy: true` fetch
+// would have already sent a 200 response with a skeleton before the
+// "not found" state was known. The trade-off is no skeleton flash here;
+// the page is either fully rendered or a proper 404.
+
+const route = useRoute()
+const slug = computed(() => String(route.params.slug))
+
+const { data: business, error: fetchError } = await useBusinessDetail(slug)
+
+if (fetchError.value) {
+  throw createError({ statusCode: 500, statusMessage: 'Failed to load this business. Please try again.' })
+}
+if (!business.value) {
+  throw createError({ statusCode: 404, statusMessage: 'Business not found', fatal: true })
+}
+
+const contactLinks = computed(() => {
+  const b = business.value!
+  return {
+    phone: b.phone,
+    whatsapp: b.whatsapp,
+    email: b.email,
+    website: b.website,
+  }
+})
+const hasContactInfo = computed(() => Object.values(contactLinks.value).some(Boolean))
+
+const locationLine = computed(() => {
+  const b = business.value!
+  return [b.address, b.city, b.province].filter(Boolean).join(', ')
+})
+
+const hoursEntries = computed(() => {
+  const hours = business.value?.hours
+  if (!hours || typeof hours !== 'object') return []
+  return Object.entries(hours as Record<string, unknown>)
+})
+
+function formatDayLabel(day: string): string {
+  return day.length ? day.charAt(0).toUpperCase() + day.slice(1) : day
+}
+
+function formatHoursValue(value: unknown): string {
+  if (value && typeof value === 'object') {
+    const range = value as Record<string, unknown>
+    if (typeof range.open === 'string' && typeof range.close === 'string') {
+      return `${range.open} – ${range.close}`
+    }
+  }
+  if (typeof value === 'string' && value) return value
+  return 'Closed'
+}
+
+function normalizeWhatsappHref(value: string): string {
+  return `https://wa.me/${value.replace(/[^\d]/g, '')}`
+}
+
+onMounted(() => {
+  if (business.value) recordBusinessView(business.value.id)
+})
+
+useSeoMeta({
+  title: () => `${business.value?.name ?? 'Business'} — Zelp`,
+  description: () => business.value?.description || `${business.value?.name} on Zelp — Zimbabwean business directory.`,
+})
+</script>
+
+<template>
+  <div v-if="business" class="mx-auto max-w-5xl px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8 flex flex-col gap-3">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <h1 class="text-3xl font-bold">
+          {{ business.name }}
+        </h1>
+      </div>
+
+      <div v-if="business.categories.length" class="flex flex-wrap gap-1">
+        <UBadge
+          v-for="category in business.categories"
+          :key="category.id"
+          :label="category.name"
+          variant="subtle"
+          color="neutral"
+        />
+      </div>
+
+      <RatingStars :rating="business.avgRating" size="md" show-value :review-count="business.reviewCount" />
+
+      <p v-if="locationLine" class="text-muted flex items-center gap-1.5">
+        <UIcon name="i-lucide-map-pin" class="size-4 shrink-0" />
+        {{ locationLine }}
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+      <div class="flex flex-col gap-8 md:col-span-2">
+        <!-- Photos -->
+        <section>
+          <h2 class="mb-3 text-lg font-semibold">
+            Photos
+          </h2>
+          <ImageGallery :images="business.images" :business-name="business.name" />
+        </section>
+
+        <!-- Description -->
+        <section v-if="business.description">
+          <h2 class="mb-2 text-lg font-semibold">
+            About
+          </h2>
+          <p class="text-toned whitespace-pre-line">
+            {{ business.description }}
+          </p>
+        </section>
+
+        <!--
+          Phase 4 hook: ReviewCard / ReviewForm / RatingStars(interactive)
+          render here, backed by the `reviews` table. `avgRating` and
+          `reviewCount` above already come from `businesses.avg_rating` /
+          `review_count`, which Phase 1's `update_business_rating()` trigger
+          keeps in sync — no extra fetch needed once review UI lands.
+        -->
+        <section class="border-default border-t pt-6">
+          <h2 class="mb-2 text-lg font-semibold">
+            Reviews ({{ business.reviewCount }})
+          </h2>
+          <p class="text-muted text-sm">
+            Review submission is coming soon.
+          </p>
+        </section>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <!-- Contact -->
+        <section v-if="hasContactInfo" class="border-default rounded-lg border p-4">
+          <h2 class="mb-3 text-lg font-semibold">
+            Contact
+          </h2>
+          <div class="flex flex-col gap-2 text-sm">
+            <a v-if="contactLinks.phone" :href="`tel:${contactLinks.phone}`" class="hover:text-primary flex items-center gap-2">
+              <UIcon name="i-lucide-phone" class="size-4 shrink-0" />
+              {{ contactLinks.phone }}
+            </a>
+            <a
+              v-if="contactLinks.whatsapp"
+              :href="normalizeWhatsappHref(contactLinks.whatsapp)"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="hover:text-primary flex items-center gap-2"
+            >
+              <UIcon name="i-lucide-message-circle" class="size-4 shrink-0" />
+              WhatsApp
+            </a>
+            <a v-if="contactLinks.email" :href="`mailto:${contactLinks.email}`" class="hover:text-primary flex items-center gap-2">
+              <UIcon name="i-lucide-mail" class="size-4 shrink-0" />
+              {{ contactLinks.email }}
+            </a>
+            <a
+              v-if="contactLinks.website"
+              :href="contactLinks.website"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="hover:text-primary flex items-center gap-2"
+            >
+              <UIcon name="i-lucide-globe" class="size-4 shrink-0" />
+              <span class="truncate">{{ contactLinks.website }}</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Hours -->
+        <section v-if="hoursEntries.length" class="border-default rounded-lg border p-4">
+          <h2 class="mb-3 text-lg font-semibold">
+            Hours
+          </h2>
+          <dl class="flex flex-col gap-1 text-sm">
+            <div v-for="[day, value] in hoursEntries" :key="day" class="flex justify-between gap-4">
+              <dt class="text-muted">
+                {{ formatDayLabel(day) }}
+              </dt>
+              <dd>{{ formatHoursValue(value) }}</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+    </div>
+  </div>
+</template>
