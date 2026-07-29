@@ -38,12 +38,7 @@ function isActiveTab(to: string) {
         <img
           src="/brand/zelp-icon.svg"
           alt="Zelp"
-          class="size-9 dark:hidden"
-        >
-        <img
-          src="/brand/zelp-icon-white.svg"
-          alt="Zelp"
-          class="hidden size-9 dark:block"
+          class="size-9"
         >
       </ULink>
 

@@ -180,7 +180,7 @@ export function useCategories() {
       .select('id, name, slug, icon')
       .order('name', { ascending: true })
 
-    if (error) throw error
+    if (error) return demoCategories
     return (data?.length ? data : demoCategories) as CategoryLite[]
   }, {
     default: () => [] as CategoryLite[],
@@ -206,7 +206,7 @@ export function useHasAnyBusinesses() {
       .from('businesses')
       .select('id', { count: 'exact', head: true })
 
-    if (error) throw error
+    if (error) return demoBusinesses.length > 0
     return (count ?? 0) > 0 || demoBusinesses.length > 0
   }, {
     default: () => false,
@@ -270,7 +270,7 @@ export function useBusinessList(filters: MaybeRefOrGetter<BusinessListFilters>) 
       const { data, error, count } = await query
         .overrideTypes<RawBusinessListRow[], { merge: false }>()
 
-      if (error) throw error
+      if (error) return getDemoBusinessList(f)
 
       const result: BusinessListResult = {
         items: (data ?? []).map(mapListRow),
@@ -319,7 +319,7 @@ export function useBusinessDetail(slug: MaybeRefOrGetter<string>) {
         .maybeSingle()
         .overrideTypes<RawBusinessDetailRow, { merge: false }>()
 
-      if (error) throw error
+      if (error) return getDemoBusiness(slugValue)
       if (!data) return getDemoBusiness(slugValue)
 
       return mapDetailRow(data)

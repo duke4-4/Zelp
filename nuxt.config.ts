@@ -14,6 +14,11 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  colorMode: {
+    preference: 'light',
+    fallback: 'light',
+  },
+
   // Self-host the two brand typefaces (Outfit for display/headings, Inter
   // for body/UI) so cheap Android/3G devices aren't round-tripping to
   // Google Fonts. `@nuxt/fonts` provisions these automatically from the
@@ -50,4 +55,3 @@ export default defineNuxtConfig({
     types: '~~/types/database.types.ts',
   },
 })
-

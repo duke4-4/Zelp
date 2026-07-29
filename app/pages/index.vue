@@ -18,12 +18,16 @@ const recentPending = computed(() => recentStatus.value === 'pending')
 <template>
   <div>
     <!-- Hero -->
-    <section class="border-b border-line">
-      <div class="mx-auto flex max-w-6xl flex-col items-center gap-6 px-5 py-16 text-center sm:py-24">
-        <h1 class="text-ink max-w-2xl text-[32px] leading-[1.1] font-semibold sm:text-4xl">
-          Discover great <span class="text-flame-500">Zimbabwean businesses</span>
+    <section class="relative overflow-hidden border-b border-line">
+      <HeroSlideshow />
+      <div class="relative z-10 mx-auto flex max-w-6xl flex-col items-center gap-6 px-5 py-16 text-center sm:py-24">
+        <p class="border-stone/60 bg-ink-900/40 rounded-full border px-3 py-1 text-xs font-medium tracking-[0.12em] text-stone uppercase">
+          Find your next local favourite
+        </p>
+        <h1 class="max-w-2xl text-[32px] leading-[1.1] font-semibold text-white sm:text-4xl">
+          Discover great <span class="text-gold-400">Zimbabwean businesses</span>
         </h1>
-        <p class="text-ink-muted max-w-xl text-base">
+        <p class="max-w-xl text-base text-stone/90">
           Search, compare and review restaurants, tradespeople, shops and services near you.
         </p>
         <div class="w-full max-w-2xl">
