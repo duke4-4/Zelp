@@ -33,5 +33,8 @@ export default defineNuxtConfig({
     serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     // Auth redirect middleware is configured in a later phase.
     redirect: false,
+    // Root-level types/ (outside app/) so server/ code can share it too.
+    types: '~~/types/database.types.ts',
   },
 })
+

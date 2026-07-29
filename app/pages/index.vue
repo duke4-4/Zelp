@@ -1,15 +1,23 @@
 <script setup lang="ts">
-// Smoke-test placeholder page — replaced in a later phase.
+// Placeholder home page — the real homepage (hero, search, business grid)
+// is built in a later phase. This proves out the auth/layout wiring.
+const user = useSupabaseUser()
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col items-center justify-center gap-4">
+  <div class="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center gap-4 px-4 text-center">
     <h1 class="text-3xl font-bold">
-      Zelp
+      Welcome to Zelp
     </h1>
-    <p class="text-muted">
-      Nuxt scaffold is up. This placeholder will be replaced.
+    <p v-if="user" class="text-muted">
+      Signed in as {{ user.email }}
     </p>
-    <UButton label="Nuxt UI is wired" />
+    <p v-else class="text-muted">
+      Not signed in.
+    </p>
+    <div v-if="!user" class="flex gap-2">
+      <UButton to="/login" variant="ghost" label="Log in" />
+      <UButton to="/signup" label="Sign up" />
+    </div>
   </div>
 </template>
