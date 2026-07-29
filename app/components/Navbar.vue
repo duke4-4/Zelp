@@ -1,53 +1,61 @@
 <script setup lang="ts">
-import type { DropdownMenuItem } from '@nuxt/ui'
-
 const user = useSupabaseUser()
 const { signOut } = useAuth()
+const route = useRoute()
 
-const mobileMenuOpen = ref(false)
 const signingOut = ref(false)
-
-const userInitial = computed(() => {
-  const email = user.value?.email
-  return email ? email.charAt(0).toUpperCase() : '?'
-})
-
-// `/profile` doesn't exist yet — it's built in a later phase, but the link
-// is wired now so it starts working the moment that page lands.
-const userMenuItems = computed<DropdownMenuItem[][]>(() => [
-  [
-    { label: 'Profile', icon: 'i-lucide-user', to: '/profile' },
-  ],
-  [
-    { label: 'Log out', icon: 'i-lucide-log-out', onSelect: handleSignOut },
-  ],
-])
 
 async function handleSignOut() {
   signingOut.value = true
   try {
     await signOut()
-    mobileMenuOpen.value = false
     await navigateTo('/')
   } finally {
     signingOut.value = false
   }
 }
+
+// Bottom tab bar (mobile only) — mapped to the app's actual routes. Favorites
+// and Profile don't exist until Phase 4/5, but per the design brief we link
+// them anyway: they 404 gracefully rather than shipping a dead-looking tab.
+const tabs = [
+  { label: 'Home', to: '/', icon: 'i-lucide-house' },
+  { label: 'Search', to: '/search', icon: 'i-lucide-search' },
+  { label: 'Favorites', to: '/favorites', icon: 'i-lucide-heart' },
+  { label: 'Profile', to: '/profile', icon: 'i-lucide-user' },
+]
+
+function isActiveTab(to: string) {
+  if (to === '/') return route.path === '/'
+  return route.path.startsWith(to)
+}
 </script>
 
 <template>
-  <header class="border-default bg-default/75 sticky top-0 z-40 border-b backdrop-blur">
-    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-      <ULink to="/" class="text-primary shrink-0 text-xl font-bold">
-        Zelp
+  <header class="bg-stone/90 sticky top-0 z-40 border-b border-line backdrop-blur">
+    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
+      <ULink to="/" class="shrink-0" aria-label="Zelp home">
+        <img
+          src="/brand/zelp-logo-horizontal.svg"
+          alt="Zelp"
+          class="h-9 w-auto dark:hidden"
+        >
+        <img
+          src="/brand/zelp-logo-horizontal-white.svg"
+          alt="Zelp"
+          class="hidden h-9 w-auto dark:block"
+        >
       </ULink>
 
       <!-- Desktop nav -->
       <div class="hidden items-center gap-2 sm:flex">
         <template v-if="user">
-          <UDropdownMenu :items="userMenuItems" :content="{ align: 'end' }">
+          <UDropdownMenu
+            :items="[[{ label: 'Profile', icon: 'i-lucide-user', to: '/profile' }], [{ label: 'Log out', icon: 'i-lucide-log-out', onSelect: handleSignOut }]]"
+            :content="{ align: 'end' }"
+          >
             <UButton variant="ghost" color="neutral" :loading="signingOut">
-              <UAvatar :text="userInitial" size="xs" />
+              <UAvatar :text="user.email?.charAt(0).toUpperCase() ?? '?'" size="xs" />
               <span class="max-w-40 truncate">{{ user.email }}</span>
             </UButton>
           </UDropdownMenu>
@@ -57,63 +65,24 @@ async function handleSignOut() {
           <UButton to="/signup" label="Sign up" />
         </template>
       </div>
-
-      <!-- Mobile trigger -->
-      <UButton
-        class="sm:hidden"
-        variant="ghost"
-        color="neutral"
-        icon="i-lucide-menu"
-        aria-label="Open menu"
-        @click="mobileMenuOpen = true"
-      />
     </div>
-
-    <!-- Mobile nav: TODO(Phase 3) — fold search/category links into this once they exist. -->
-    <USlideover v-model:open="mobileMenuOpen" side="right" title="Menu">
-      <template #body>
-        <div class="flex flex-col gap-2">
-          <template v-if="user">
-            <p class="text-muted truncate px-1 text-sm">
-              {{ user.email }}
-            </p>
-            <UButton
-              to="/profile"
-              variant="ghost"
-              color="neutral"
-              label="Profile"
-              icon="i-lucide-user"
-              block
-              @click="mobileMenuOpen = false"
-            />
-            <UButton
-              variant="ghost"
-              color="neutral"
-              label="Log out"
-              icon="i-lucide-log-out"
-              block
-              :loading="signingOut"
-              @click="handleSignOut"
-            />
-          </template>
-          <template v-else>
-            <UButton
-              to="/login"
-              variant="ghost"
-              color="neutral"
-              label="Log in"
-              block
-              @click="mobileMenuOpen = false"
-            />
-            <UButton
-              to="/signup"
-              label="Sign up"
-              block
-              @click="mobileMenuOpen = false"
-            />
-          </template>
-        </div>
-      </template>
-    </USlideover>
   </header>
+
+  <!-- Mobile bottom tab bar — replaces the old slideover mobile menu so
+       there's a single, brand-consistent mobile navigation surface. -->
+  <nav
+    class="bg-surface fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-line pb-[env(safe-area-inset-bottom)] sm:hidden"
+    aria-label="Primary"
+  >
+    <ULink
+      v-for="tab in tabs"
+      :key="tab.to"
+      :to="tab.to"
+      class="flex flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-medium tracking-wide transition-colors"
+      :class="isActiveTab(tab.to) ? 'text-flame-500' : 'text-ink-faint'"
+    >
+      <UIcon :name="tab.icon" class="size-5" />
+      {{ tab.label }}
+    </ULink>
+  </nav>
 </template>

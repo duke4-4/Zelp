@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 325 100" width="325" height="100" role="img" aria-label="Zelp">
+  <title>Zelp wordmark</title>
+  <g fill="#15201B">
+    <path d="M0,0 H76 V22 L26,78 H76 V100 H0 V78 L50,22 H0 Z"/>
+    <path d="M96,0 H158 V22 H118 V39 H152 V61 H118 V78 H158 V100 H96 Z"/>
+    <path d="M178,0 H200 V78 H236 V100 H178 Z"/>
+    <path fill-rule="evenodd" d="M256,0 H292 A33,33 0 0 1 292,66 H278 V100 H256 Z M278,46 H292 A13,13 0 0 0 292,20 H278 Z"/>
+  </g>
+</svg>

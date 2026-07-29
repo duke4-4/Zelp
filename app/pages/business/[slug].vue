@@ -63,6 +63,24 @@ function normalizeWhatsappHref(value: string): string {
   return `https://wa.me/${value.replace(/[^\d]/g, '')}`
 }
 
+// Directions isn't a stored contact field — it's a Google Maps deep link
+// built from the address/city/province already fetched for the header, so
+// it's presentation only (no new data usage).
+const directionsHref = computed(() => locationLine.value
+  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationLine.value)}`
+  : null)
+
+const actionRow = computed(() => {
+  const b = business.value
+  if (!b) return []
+  return [
+    directionsHref.value && { label: 'Directions', icon: 'i-lucide-navigation', href: directionsHref.value, external: true },
+    b.phone && { label: 'Call', icon: 'i-lucide-phone', href: `tel:${b.phone}` },
+    b.whatsapp && { label: 'WhatsApp', icon: 'i-lucide-message-circle', href: normalizeWhatsappHref(b.whatsapp), external: true },
+    b.website && { label: 'Website', icon: 'i-lucide-globe', href: b.website, external: true },
+  ].filter((item): item is { label: string, icon: string, href: string, external?: boolean } => Boolean(item))
+})
+
 onMounted(() => {
   if (business.value) recordBusinessView(business.value.id)
 })

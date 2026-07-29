@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Zelp app icon">
+  <title>Zelp app icon</title>
+  <defs>
+    <linearGradient id="flame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F2B133"/>
+      <stop offset="0.42" stop-color="#E4632C"/>
+      <stop offset="1" stop-color="#C23C1B"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#flame)"/>
+  <g transform="translate(126.7,100) scale(2.586)">
+    <path fill="#FFF7EF" d="M26,0 H74 A26,26 0 0 1 100,26 V66 A26,26 0 0 1 74,92 H62 L50,116 L38,92 H26 A26,26 0 0 1 0,66 V26 A26,26 0 0 1 26,0 Z"/>
+    <g transform="translate(32.5,23) scale(0.46)"><path fill="url(#flame)" d="M0,0 H76 V22 L26,78 H76 V100 H0 V78 L50,22 H0 Z"/></g>
+  </g>
+</svg>

@@ -41,18 +41,24 @@ const fillPercent = computed(() => `${(clampedRating.value / 5) * 100}%`)
     :aria-label="`Rated ${clampedRating.toFixed(1)} out of 5`"
   >
     <div class="relative inline-flex">
-      <div class="flex gap-0.5 text-neutral-300 dark:text-neutral-700">
+      <div class="text-ink-200 dark:text-ink-700 flex gap-0.5">
         <UIcon v-for="i in 5" :key="`bg-${i}`" name="i-lucide-star" :class="sizeClasses[size]" />
       </div>
       <div
-        class="absolute inset-0 flex gap-0.5 overflow-hidden text-yellow-400"
+        class="text-gold-500 absolute inset-0 flex gap-0.5 overflow-hidden"
         :style="{ width: fillPercent }"
       >
-        <UIcon v-for="i in 5" :key="`fg-${i}`" name="i-lucide-star" class="shrink-0" :class="sizeClasses[size]" />
+        <UIcon
+          v-for="i in 5"
+          :key="`fg-${i}`"
+          name="i-lucide-star"
+          class="shrink-0"
+          :class="sizeClasses[size]"
+        />
       </div>
     </div>
-    <span v-if="showValue" class="text-muted text-sm tabular-nums">{{ clampedRating.toFixed(1) }}</span>
-    <span v-if="typeof reviewCount === 'number'" class="text-muted text-sm">
+    <span v-if="showValue" class="text-ink tabular-nums text-sm font-medium">{{ clampedRating.toFixed(1) }}</span>
+    <span v-if="typeof reviewCount === 'number'" class="text-ink-faint tabular-nums text-sm">
       ({{ reviewCount }})
     </span>
   </div>

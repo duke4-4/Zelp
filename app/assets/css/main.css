@@ -1,2 +1,176 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+
+/*
+ * Zelp design tokens — see docs/zelp-brand-guidelines.md for the source
+ * brand kit. Each brand color is expanded into a full 50–950 Tailwind v4
+ * scale anchored on its brief-specified hex (used as the ~500 step), plus a
+ * handful of flat semantic aliases (ink/stone/surface/line/tints) that match
+ * the brief's own token vocabulary so components can use classes like
+ * `bg-stone`, `text-ink-muted`, `bg-flame-tint` directly.
+ *
+ * Discipline rule from the brief: flame is the only saturated colour at
+ * rest, max ~3 uses per viewport; gold is reserved for rating signal.
+ */
+@theme {
+  --font-display: "Outfit", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+
+  /* Msasa Flame — primary: buttons, active states, map pins, logo */
+  --color-flame-50: #fdf0ea;
+  --color-flame-100: #fadfd2;
+  --color-flame-200: #f3bfa5;
+  --color-flame-300: #eb9e78;
+  --color-flame-400: #e8663f;
+  --color-flame-500: #d9502b;
+  --color-flame-600: #c23c1b;
+  --color-flame-700: #9e3016;
+  --color-flame-800: #7a2512;
+  --color-flame-900: #571b0d;
+  --color-flame-950: #350f07;
+
+  /* Frieze Gold — accent: stars, ratings, badges. Never body text. */
+  --color-gold-50: #fef6e6;
+  --color-gold-100: #fcead1;
+  --color-gold-200: #f9d89d;
+  --color-gold-300: #f6c66f;
+  --color-gold-400: #f4bc4f;
+  --color-gold-500: #f2b133;
+  --color-gold-600: #d89321;
+  --color-gold-700: #b3741a;
+  --color-gold-800: #8c5a15;
+  --color-gold-900: #674110;
+  --color-gold-950: #402709;
+
+  /* Msasa Green — secondary/success: open now, verified, success states */
+  --color-green-50: #e8f1ed;
+  --color-green-100: #c9dfd5;
+  --color-green-200: #9fc7b5;
+  --color-green-300: #74ae95;
+  --color-green-400: #4f8e76;
+  --color-green-500: #2e6a52;
+  --color-green-600: #245844;
+  --color-green-700: #1c4736;
+  --color-green-800: #153629;
+  --color-green-900: #0e251b;
+  --color-green-950: #08160f;
+
+  /* Closed / error: closed now, form errors */
+  --color-closed-50: #fbeae4;
+  --color-closed-100: #f5cdbf;
+  --color-closed-200: #e9a88c;
+  --color-closed-300: #dc8461;
+  --color-closed-400: #c25e3c;
+  --color-closed-500: #a33a22;
+  --color-closed-600: #8a2f1a;
+  --color-closed-700: #6e2515;
+  --color-closed-800: #521b10;
+  --color-closed-900: #37120b;
+  --color-closed-950: #200a06;
+
+  /*
+   * Granite Ink — mapped as Nuxt UI's "neutral" so every semantic surface
+   * (borders, muted/toned/dimmed text, elevated backgrounds) is warm and
+   * ink-tinted instead of Nuxt UI's default cool slate. The 100/200/500/700/
+   * 900 stops reuse the brief's exact stone/line/ink-faint/ink-muted/ink
+   * hexes so this ramp stays faithful to the token sheet.
+   */
+  --color-ink-50: #fbf9f4;
+  --color-ink-100: #f7f1e7;
+  --color-ink-200: #eae4d9;
+  --color-ink-300: #d3cbbc;
+  --color-ink-400: #aca495;
+  --color-ink-500: #8a938e;
+  --color-ink-600: #6e766f;
+  --color-ink-700: #55605a;
+  --color-ink-800: #333e37;
+  --color-ink-900: #15201b;
+  --color-ink-950: #0b100d;
+
+  /* Flat semantic aliases used directly in markup (bg-stone, text-ink, etc). */
+  --color-ink: #15201b;
+  --color-ink-muted: #55605a;
+  --color-ink-faint: #8a938e;
+  --color-stone: #f7f1e7;
+  --color-surface: #ffffff;
+  --color-line: #eae4d9;
+  --color-flame-tint: #fdf0ea;
+  --color-flame-press: #c23c1b;
+  --color-gold-tint: #fef6e6;
+  --color-green-tint: #e8f1ed;
+  --color-closed: #a33a22;
+
+  /* Shape */
+  --radius-card: 18px;
+  --radius-card-image: 14px;
+  --radius-input: 12px;
+  --radius-sheet: 24px;
+
+  /* Shadows — barely-there, no coloured glows */
+  --shadow-resting: 0 1px 2px rgba(21, 32, 27, 0.06);
+  --shadow-floating: 0 6px 20px rgba(21, 32, 27, 0.08);
+}
+
+/* Dark mode overrides — Nuxt UI's colour-mode plugin toggles a `.dark`
+ * class on the root element; our own semantic tokens follow the same
+ * convention so `bg-stone`, `text-ink`, etc. flip automatically. Brand
+ * colours registered via `ui.colors` in app.config.ts already get a
+ * lighter shade in dark mode from Nuxt UI itself (it swaps to the 400
+ * step), which is why flame-400 above is set to the brief's dark-mode
+ * "lifted" flame (#E8663F) — gold stays close to its light-mode value by
+ * design ("gold stays").
+ */
+.dark {
+  --color-ink: #f7f1e7;
+  --color-ink-muted: #b9c2bb;
+  --color-ink-faint: #8a938e;
+  --color-stone: #121916;
+  --color-surface: #1b2420;
+  --color-line: #2a342e;
+
+  --ui-bg: #1b2420;
+  --ui-bg-elevated: #232f29;
+  --ui-bg-accented: #2a342e;
+  --ui-border: #2a342e;
+  --ui-border-muted: #2a342e;
+}
+
+@layer base {
+  html {
+    font-variant-numeric: normal;
+  }
+
+  body {
+    background-color: var(--color-stone);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  /* Ratings, prices, counts, distances — always tabular so digits don't jog. */
+  .tabular-nums,
+  .zelp-numeric {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

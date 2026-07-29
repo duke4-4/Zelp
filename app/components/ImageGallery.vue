@@ -38,7 +38,7 @@ const activeImage = computed(() => activeIndex.value !== null ? props.images[act
       v-for="(image, index) in images"
       :key="image.id"
       type="button"
-      class="bg-elevated aspect-square overflow-hidden rounded-lg"
+      class="bg-ink-100 aspect-square overflow-hidden rounded-[14px] transition hover:opacity-90"
       @click="open(index)"
     >
       <NuxtImg

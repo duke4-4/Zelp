@@ -51,37 +51,50 @@ const sortModel = computed<'newest' | 'rating'>({
   get: () => props.modelValue.sort ?? 'newest',
   set: (value) => emit('update:modelValue', { ...props.modelValue, sort: value }),
 })
+
+// Chip-row treatment: unselected chips are white/line-border, an active
+// filter (non-default value) fills with flame-tint + flame border/text.
+const chipUi = { base: 'rounded-full' }
 </script>
 
 <template>
-  <div class="flex flex-wrap items-center gap-3">
+  <div class="flex flex-wrap items-center gap-2.5">
     <USelect
       v-model="categoryModel"
       :items="categoryItems"
       value-key="value"
       label-key="label"
       :loading="categoriesStatus === 'pending'"
+      :color="categoryModel ? 'primary' : 'neutral'"
+      :variant="categoryModel ? 'subtle' : 'outline'"
       placeholder="Category"
       icon="i-lucide-tag"
       class="w-44"
+      :ui="chipUi"
     />
     <USelect
       v-model="ratingModel"
       :items="ratingItems"
       value-key="value"
       label-key="label"
+      :color="ratingModel ? 'primary' : 'neutral'"
+      :variant="ratingModel ? 'subtle' : 'outline'"
       placeholder="Rating"
       icon="i-lucide-star"
       class="w-36"
+      :ui="chipUi"
     />
     <USelect
       v-model="sortModel"
       :items="sortItems"
       value-key="value"
       label-key="label"
+      :color="sortModel !== 'newest' ? 'primary' : 'neutral'"
+      :variant="sortModel !== 'newest' ? 'subtle' : 'outline'"
       placeholder="Sort by"
       icon="i-lucide-arrow-up-down"
       class="w-36"
+      :ui="chipUi"
     />
   </div>
 </template>

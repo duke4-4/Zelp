@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240" width="400" height="240" role="img" aria-label="Zelp chevron frieze pattern">
+  <title>Zelp chevron frieze</title>
+  <defs>
+    <pattern id="frieze" width="40" height="60" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter">
+        <path d="M0,15 L10,3 L20,15 L30,3 L40,15" stroke="#15201B"/>
+        <path d="M0,35 L10,23 L20,35 L30,23 L40,35" stroke="#D9502B"/>
+        <path d="M0,55 L10,43 L20,55 L30,43 L40,55" stroke="#F2B133"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="400" height="240" fill="#F7F1E7"/>
+  <rect width="400" height="240" fill="url(#frieze)"/>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 399 116" width="399" height="116" role="img" aria-label="Zelp">
+  <title>Zelp horizontal logo, reversed</title>
+  <path fill="#FFFFFF" fill-rule="evenodd" d="M26,0 H74 A26,26 0 0 1 100,26 V66 A26,26 0 0 1 74,92 H62 L50,116 L38,92 H26 A26,26 0 0 1 0,66 V26 A26,26 0 0 1 26,0 Z M32.5,23 h34.96 v10.12 l-23,25.76 h23 v10.12 h-34.96 v-10.12 l23,-25.76 h-23 Z"/>
+  <g transform="translate(132,5) scale(0.82)" fill="#FFFFFF"><path d="M0,0 H76 V22 L26,78 H76 V100 H0 V78 L50,22 H0 Z"/><path d="M96,0 H158 V22 H118 V39 H152 V61 H118 V78 H158 V100 H96 Z"/><path d="M178,0 H200 V78 H236 V100 H178 Z"/><path fill-rule="evenodd" d="M256,0 H292 A33,33 0 0 1 292,66 H278 V100 H256 Z M278,46 H292 A13,13 0 0 0 292,20 H278 Z"/></g>
+</svg>

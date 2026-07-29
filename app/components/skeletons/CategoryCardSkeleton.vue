@@ -1,6 +1,6 @@
 <template>
-  <div class="border-default flex flex-col items-center gap-2 rounded-lg border p-4">
-    <USkeleton class="size-8 rounded-full" />
-    <USkeleton class="h-4 w-16" />
+  <div class="flex flex-col items-center gap-2 p-4">
+    <USkeleton class="bg-ink-100 size-8 rounded-full" />
+    <USkeleton class="bg-ink-100 h-3 w-14" />
   </div>
 </template>

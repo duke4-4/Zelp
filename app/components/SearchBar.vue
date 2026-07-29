@@ -50,6 +50,7 @@ function handleSubmit() {
       icon="i-lucide-search"
       size="xl"
       class="flex-1"
+      :ui="{ base: 'rounded-full shadow-[var(--shadow-resting)]' }"
       :placeholder="placeholder"
       aria-label="Search businesses"
     />
@@ -58,6 +59,7 @@ function handleSubmit() {
       icon="i-lucide-map-pin"
       size="xl"
       class="sm:w-48"
+      :ui="{ base: 'rounded-full shadow-[var(--shadow-resting)]' }"
       placeholder="City (optional)"
       aria-label="City"
     />

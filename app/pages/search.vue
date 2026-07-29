@@ -63,34 +63,50 @@ function handlePageChange(page: number) {
 const emptyStateCopy = computed(() => {
   if (!hasAnyBusinesses.value) {
     return {
-      title: 'No businesses on Zelp yet',
-      description: 'Zelp is brand new — businesses will start appearing here soon.',
+      title: 'Zelp is brand new — be the first business here',
+      description: 'Businesses will start appearing here as soon as they join.',
     }
   }
   return {
-    title: 'No results found',
+    title: 'No matches yet',
     description: 'Try a different search term, or adjust your filters.',
   }
 })
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl px-4 py-8">
-    <div class="mb-6">
+  <div class="mx-auto max-w-6xl px-5 py-8">
+    <div class="mb-5">
       <SearchBar :model-value="filters.q" :initial-city="filters.city" />
     </div>
 
-    <div class="mb-6">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
       <Filters :model-value="filtersValue" @update:model-value="handleFiltersUpdate" />
+
+      <!-- Placeholder list/map toggle — inert, Phase 7 wires the actual map. -->
+      <div class="border-line bg-surface flex shrink-0 items-center gap-0.5 rounded-full border p-0.5" role="group" aria-label="View">
+        <span class="bg-flame-tint text-flame-500 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium">
+          <UIcon name="i-lucide-list" class="size-4" />
+          List
+        </span>
+        <span
+          class="text-ink-faint flex cursor-not-allowed items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium"
+          aria-disabled="true"
+          title="Map view is coming soon"
+        >
+          <UIcon name="i-lucide-map" class="size-4" />
+          Map
+        </span>
+      </div>
     </div>
 
-    <p class="text-muted mb-4 text-sm">
+    <p class="text-ink-faint tabular-nums mb-4 text-sm">
       <template v-if="!pending">
         {{ results.total }} business{{ results.total === 1 ? '' : 'es' }} found
       </template>
     </p>
 
-    <div v-if="pending" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div v-if="pending" class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
       <BusinessCardSkeleton v-for="i in 6" :key="i" />
     </div>
 
@@ -101,7 +117,7 @@ const emptyStateCopy = computed(() => {
     />
 
     <template v-else>
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
         <BusinessCard v-for="business in results.items" :key="business.id" :business="business" />
       </div>
 

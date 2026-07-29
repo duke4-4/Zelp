@@ -5,6 +5,7 @@ export default defineNuxtConfig({
 
   modules: [
     '@nuxt/eslint',
+    '@nuxt/fonts',
     '@nuxt/image',
     '@nuxt/ui',
     '@nuxtjs/supabase',
@@ -12,6 +13,18 @@ export default defineNuxtConfig({
   ],
 
   css: ['~/assets/css/main.css'],
+
+  // Self-host the two brand typefaces (Outfit for display/headings, Inter
+  // for body/UI) so cheap Android/3G devices aren't round-tripping to
+  // Google Fonts. `@nuxt/fonts` provisions these automatically from the
+  // `font-family` values referenced in app/assets/css/main.css's `@theme`
+  // block (--font-display / --font-sans).
+  fonts: {
+    families: [
+      { name: 'Outfit', provider: 'google', weights: [600] },
+      { name: 'Inter', provider: 'google', weights: [400, 500] },
+    ],
+  },
 
   typescript: {
     strict: true,
