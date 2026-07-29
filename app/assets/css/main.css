@@ -115,6 +115,7 @@
   html {
     font-variant-numeric: normal;
     color-scheme: light;
+    background: var(--color-stone);
   }
 
   body {
@@ -142,6 +143,41 @@
 }
 
 @layer components {
+  .zelp-page {
+    min-height: 100%;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(242, 177, 51, 0.1), transparent 23rem),
+      var(--color-stone);
+  }
+
+  .zelp-container {
+    width: min(100% - 2.5rem, 72rem);
+    margin-inline: auto;
+  }
+
+  .zelp-surface {
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-resting);
+  }
+
+  .zelp-section-title {
+    font-family: var(--font-display);
+    color: var(--color-ink);
+    font-size: clamp(1.25rem, 2vw, 1.5rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .zelp-kicker {
+    color: var(--color-flame-500);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
   .zelp-brand-stripe {
     display: flex;
     height: 4px;

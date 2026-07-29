@@ -17,30 +17,40 @@ const recentPending = computed(() => recentStatus.value === 'pending')
 
 <template>
   <div>
-    <!-- Hero -->
+    <!-- Discovery-first hero: large location-led search on a visual backdrop. -->
     <section class="relative overflow-hidden border-b border-line">
       <HeroSlideshow />
-      <div class="relative z-10 mx-auto flex max-w-6xl flex-col items-center gap-6 px-5 py-16 text-center sm:py-24">
+      <div class="relative z-10 mx-auto flex max-w-6xl flex-col items-start gap-6 px-5 py-14 text-left sm:py-24">
         <p class="border-stone/60 bg-ink-900/40 rounded-full border px-3 py-1 text-xs font-medium tracking-[0.12em] text-stone uppercase">
-          Find your next local favourite
+          Explore nearby
         </p>
-        <h1 class="max-w-2xl text-[32px] leading-[1.1] font-semibold text-white sm:text-4xl">
-          Discover great <span class="text-gold-400">Zimbabwean businesses</span>
+        <h1 class="max-w-2xl text-[34px] leading-[1.06] font-semibold text-white sm:text-5xl">
+          The best of your city,<br><span class="text-gold-400">all in one place.</span>
         </h1>
-        <p class="max-w-xl text-base text-stone/90">
-          Search, compare and review restaurants, tradespeople, shops and services near you.
+        <p class="max-w-lg text-base leading-7 text-stone/90">
+          Find trusted places to eat, shop, stay and get things done across Zimbabwe.
         </p>
-        <div class="w-full max-w-2xl">
+        <div class="w-full max-w-3xl">
           <SearchBar />
+        </div>
+        <div class="flex flex-wrap gap-2 text-sm text-stone">
+          <span class="text-stone/75">Popular:</span>
+          <ULink to="/search?category=restaurants" class="rounded-full border border-stone/40 px-3 py-1 hover:bg-white/10">Restaurants</ULink>
+          <ULink to="/search?category=salons" class="rounded-full border border-stone/40 px-3 py-1 hover:bg-white/10">Salons</ULink>
+          <ULink to="/search?category=home-services" class="rounded-full border border-stone/40 px-3 py-1 hover:bg-white/10">Home services</ULink>
         </div>
       </div>
     </section>
 
     <!-- Browse by category -->
-    <section class="mx-auto max-w-6xl px-5 py-12">
-      <h2 class="text-ink mb-5 text-xl font-semibold">
-        Browse by category
-      </h2>
+    <section class="zelp-container py-10 sm:py-14">
+      <div class="mb-5 flex items-end justify-between gap-4">
+        <div>
+          <p class="zelp-kicker mb-1">Start exploring</p>
+          <h2 class="zelp-section-title">What are you looking for?</h2>
+        </div>
+        <ULink to="/search" class="text-flame-500 hidden text-sm font-medium sm:block">View all</ULink>
+      </div>
 
       <div v-if="categoriesPending" class="flex gap-4 overflow-x-auto pb-1">
         <CategoryCardSkeleton v-for="i in 6" :key="i" />
@@ -55,14 +65,14 @@ const recentPending = computed(() => recentStatus.value === 'pending')
 
       <!-- Category rail: horizontal scroll on all sizes so it reads like a
            rail rather than a dense grid, per the brief's Airbnb-style shell. -->
-      <div v-else class="flex snap-x gap-2 overflow-x-auto pb-1">
+      <div v-else class="flex snap-x gap-3 overflow-x-auto pb-2">
         <ULink
           v-for="category in categories"
           :key="category.id"
           :to="{ path: '/search', query: { category: category.slug } }"
-          class="group flex w-20 shrink-0 snap-start flex-col items-center gap-2 pt-1 pb-2 text-center"
+          class="group flex w-[88px] shrink-0 snap-start flex-col items-center gap-2 pb-2 text-center"
         >
-          <span class="bg-stone text-flame-500 border-line flex size-14 items-center justify-center rounded-full border transition group-hover:border-flame-500">
+          <span class="bg-surface text-flame-500 border-line flex size-[68px] items-center justify-center rounded-[22px] border shadow-[var(--shadow-resting)] transition group-hover:-translate-y-0.5 group-hover:border-flame-500">
             <UIcon :name="category.icon || 'i-lucide-shapes'" class="size-6" />
           </span>
           <span class="text-ink text-[11px] leading-[1.2] font-medium tracking-[0.02em] uppercase border-b-2 border-transparent pb-0.5 group-hover:border-flame-500">
@@ -73,11 +83,12 @@ const recentPending = computed(() => recentStatus.value === 'pending')
     </section>
 
     <!-- Recently added businesses -->
-    <section class="mx-auto max-w-6xl px-5 py-12">
+    <section class="zelp-container pb-12 pt-2 sm:pb-16">
       <div class="mb-5 flex items-center justify-between">
-        <h2 class="text-ink text-xl font-semibold">
-          Recently added
-        </h2>
+        <div>
+          <p class="zelp-kicker mb-1">Fresh finds</p>
+          <h2 class="zelp-section-title">Recently added</h2>
+        </div>
         <UButton
           v-if="recentBusinesses.items.length"
           to="/search?sort=newest"
@@ -87,7 +98,7 @@ const recentPending = computed(() => recentStatus.value === 'pending')
         />
       </div>
 
-      <div v-if="recentPending" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div v-if="recentPending" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <BusinessCardSkeleton v-for="i in 4" :key="i" />
       </div>
 
@@ -102,7 +113,7 @@ const recentPending = computed(() => recentStatus.value === 'pending')
         </template>
       </EmptyState>
 
-      <div v-else class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+      <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <BusinessCard v-for="business in recentBusinesses.items" :key="business.id" :business="business" />
       </div>
     </section>

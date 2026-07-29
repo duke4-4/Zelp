@@ -33,17 +33,20 @@ function isActiveTab(to: string) {
 
 <template>
   <header class="bg-stone/90 sticky top-0 z-40 border-b border-line backdrop-blur">
-    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
-      <ULink to="/" class="shrink-0" aria-label="Zelp home">
+    <div class="mx-auto flex h-[68px] max-w-6xl items-center justify-between gap-4 px-5">
+      <ULink to="/" class="flex shrink-0 items-center gap-2" aria-label="Zelp home">
         <img
           src="/brand/zelp-icon.svg"
           alt="Zelp"
           class="size-9"
         >
+        <span class="font-display text-ink hidden text-lg font-semibold sm:inline">Zelp</span>
       </ULink>
 
       <!-- Desktop nav -->
-      <div class="hidden items-center gap-2 sm:flex">
+      <div class="hidden items-center gap-1 sm:flex">
+        <UButton to="/search" variant="ghost" color="neutral" label="Explore" icon="i-lucide-compass" />
+        <UButton to="/business/new" variant="ghost" color="neutral" label="List a business" />
         <template v-if="user">
           <UDropdownMenu
             :items="[[{ label: 'Profile', icon: 'i-lucide-user', to: '/profile' }], [{ label: 'Log out', icon: 'i-lucide-log-out', onSelect: handleSignOut }]]"
@@ -66,7 +69,7 @@ function isActiveTab(to: string) {
   <!-- Mobile bottom tab bar — replaces the old slideover mobile menu so
        there's a single, brand-consistent mobile navigation surface. -->
   <nav
-    class="bg-surface fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-line pb-[env(safe-area-inset-bottom)] sm:hidden"
+    class="bg-surface/95 fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-line pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(21,32,27,0.06)] backdrop-blur sm:hidden"
     aria-label="Primary"
   >
     <ULink

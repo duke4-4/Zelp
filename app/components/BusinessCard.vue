@@ -38,8 +38,8 @@ async function handleSaveClick(event: MouseEvent) {
 </script>
 
 <template>
-  <ULink :to="`/business/${business.slug}`" class="group flex flex-col gap-2">
-    <div class="bg-ink-100 relative aspect-[4/3] w-full overflow-hidden rounded-[14px]">
+  <ULink :to="`/business/${business.slug}`" class="group zelp-surface flex flex-col overflow-hidden transition duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-floating)]">
+    <div class="bg-ink-100 relative aspect-[4/3] w-full overflow-hidden rounded-none">
       <NuxtImg
         v-if="business.coverImageUrl"
         :src="business.coverImageUrl"
@@ -74,7 +74,10 @@ async function handleSaveClick(event: MouseEvent) {
       </span>
     </div>
 
-    <div class="flex flex-col gap-1">
+    <div class="flex flex-col gap-1.5 p-3.5 pt-1">
+      <p v-if="business.categories.length" class="text-ink-faint line-clamp-1 text-[11px] font-semibold tracking-[0.08em] uppercase">
+        {{ business.categories.slice(0, 2).map(c => c.name).join(' · ') }}
+      </p>
       <div class="flex items-start justify-between gap-2">
         <h3 class="text-ink line-clamp-1 text-base font-medium">
           {{ business.name }}

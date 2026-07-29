@@ -75,12 +75,14 @@ const emptyStateCopy = computed(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-6xl px-5 py-8">
-    <div class="mb-5">
+  <div class="zelp-container py-6 sm:py-10">
+    <div class="mb-6">
+      <p class="zelp-kicker mb-1">Explore Zelp</p>
+      <h1 class="zelp-section-title mb-4 text-2xl sm:text-3xl">Find a place you’ll love</h1>
       <SearchBar :model-value="filters.q" :initial-city="filters.city" />
     </div>
 
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div class="zelp-surface mb-6 flex flex-col gap-4 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
       <Filters :model-value="filtersValue" @update:model-value="handleFiltersUpdate" />
 
       <!-- Placeholder list/map toggle — inert, Phase 7 wires the actual map. -->
@@ -106,7 +108,7 @@ const emptyStateCopy = computed(() => {
       </template>
     </p>
 
-    <div v-if="pending" class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+    <div v-if="pending" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <BusinessCardSkeleton v-for="i in 6" :key="i" />
     </div>
 
@@ -117,7 +119,7 @@ const emptyStateCopy = computed(() => {
     />
 
     <template v-else>
-      <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <BusinessCard v-for="business in results.items" :key="business.id" :business="business" />
       </div>
 

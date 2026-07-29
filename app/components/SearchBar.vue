@@ -44,13 +44,13 @@ function handleSubmit() {
 </script>
 
 <template>
-  <form class="flex w-full flex-col gap-2 sm:flex-row" @submit.prevent="handleSubmit">
+  <form class="bg-surface flex w-full flex-col gap-2 rounded-[22px] border border-line p-2 shadow-[var(--shadow-floating)] sm:flex-row sm:rounded-full" @submit.prevent="handleSubmit">
     <UInput
       v-model="query"
       icon="i-lucide-search"
       size="xl"
       class="flex-1"
-      :ui="{ base: 'rounded-full shadow-[var(--shadow-resting)]' }"
+      :ui="{ base: 'rounded-[14px] border-0 bg-transparent shadow-none sm:rounded-full' }"
       :placeholder="placeholder"
       aria-label="Search businesses"
     />
@@ -59,10 +59,10 @@ function handleSubmit() {
       icon="i-lucide-map-pin"
       size="xl"
       class="sm:w-48"
-      :ui="{ base: 'rounded-full shadow-[var(--shadow-resting)]' }"
+      :ui="{ base: 'rounded-[14px] border-0 bg-transparent shadow-none sm:rounded-full' }"
       placeholder="City (optional)"
       aria-label="City"
     />
-    <UButton type="submit" size="xl" label="Search" icon="i-lucide-search" class="justify-center" />
+    <UButton type="submit" size="xl" label="Search" icon="i-lucide-search" class="justify-center rounded-[14px] sm:rounded-full" />
   </form>
 </template>
