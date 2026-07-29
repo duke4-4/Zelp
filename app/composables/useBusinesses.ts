@@ -82,7 +82,7 @@ const DEFAULT_PAGE_SIZE = 12
 // in @supabase/postgrest-js is easy to get subtly wrong without a live
 // project to check the generated types against.
 
-interface RawBusinessListRow {
+export interface RawBusinessListRow {
   id: string
   name: string
   slug: string
@@ -122,7 +122,10 @@ function mapCategories(rows: { categories: CategoryLite | null }[] | null): Cate
     .filter((c): c is CategoryLite => !!c)
 }
 
-function mapListRow(row: RawBusinessListRow): BusinessListItem {
+// Exported so `useFavourites.ts` (favourited-business summaries, same
+// underlying row shape via the `favourites -> businesses` embed) can reuse
+// this mapping instead of duplicating the cover-image/category logic.
+export function mapListRow(row: RawBusinessListRow): BusinessListItem {
   return {
     id: row.id,
     name: row.name,

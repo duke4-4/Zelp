@@ -1,16 +1,39 @@
 <script setup lang="ts">
 import type { BusinessListItem } from '~/composables/useBusinesses'
 
-defineProps<{
+const props = defineProps<{
   business: BusinessListItem
 }>()
 
-// TODO(Phase 4): wire this up to the real favourites table + useAuth-gated
-// toggle mutation once that feature lands. For now it's a styled, inert
-// button — no favourites data exists yet to back it.
-function handleSaveClick(event: MouseEvent) {
+const user = useSupabaseUser()
+const route = useRoute()
+const { isFavourited, toggle } = useFavourites()
+
+const favourited = computed(() => isFavourited(props.business.id))
+const favError = ref('')
+let favErrorTimer: ReturnType<typeof setTimeout> | undefined
+
+// Requires sign-in (redirects to /login, preserving the current page so the
+// visitor lands back here) rather than silently failing for anon visitors.
+// Once signed in, the toggle itself is optimistic (see useFavourites) with
+// a rollback + surfaced error message on failure.
+async function handleSaveClick(event: MouseEvent) {
   event.preventDefault()
   event.stopPropagation()
+
+  if (!user.value) {
+    await navigateTo({ path: '/login', query: { redirect: route.fullPath } })
+    return
+  }
+
+  favError.value = ''
+  try {
+    await toggle(props.business.id)
+  } catch (error) {
+    favError.value = error instanceof Error ? error.message : 'Could not update favorites.'
+    clearTimeout(favErrorTimer)
+    favErrorTimer = setTimeout(() => { favError.value = '' }, 4000)
+  }
 }
 </script>
 
@@ -35,12 +58,20 @@ function handleSaveClick(event: MouseEvent) {
 
       <button
         type="button"
-        aria-label="Save to favorites"
+        :aria-label="favourited ? 'Remove from favorites' : 'Save to favorites'"
+        :aria-pressed="favourited"
         class="bg-surface/90 text-ink absolute top-2.5 right-2.5 flex size-8 items-center justify-center rounded-full shadow-[var(--shadow-resting)] transition hover:scale-105"
         @click="handleSaveClick"
       >
-        <UIcon name="i-lucide-heart" class="size-4" />
+        <UIcon name="i-lucide-heart" class="size-4" :class="favourited ? 'text-flame-500 fill-current' : ''" />
       </button>
+
+      <span
+        v-if="favError"
+        class="bg-surface text-closed-500 absolute top-11 right-2.5 z-10 max-w-40 rounded-[10px] p-2 text-right text-xs shadow-[var(--shadow-floating)]"
+      >
+        {{ favError }}
+      </span>
     </div>
 
     <div class="flex flex-col gap-1">

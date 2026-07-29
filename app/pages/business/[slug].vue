@@ -12,8 +12,9 @@
 
 const route = useRoute()
 const slug = computed(() => String(route.params.slug))
+const user = useSupabaseUser()
 
-const { data: business, error: fetchError } = await useBusinessDetail(slug)
+const { data: business, error: fetchError, refresh: refreshBusiness } = await useBusinessDetail(slug)
 
 if (fetchError.value) {
   throw createError({ statusCode: 500, statusMessage: 'Failed to load this business. Please try again.' })
@@ -21,6 +22,11 @@ if (fetchError.value) {
 if (!business.value) {
   throw createError({ statusCode: 404, statusMessage: 'Business not found', fatal: true })
 }
+
+// Owners can't review their own business (enforced at the DB/RLS level
+// too) — the write-a-review form is simply never shown to them, rather
+// than letting them submit and hit a policy-violation error.
+const isOwner = computed(() => !!user.value && user.value.id === business.value?.owner?.id)
 
 const contactLinks = computed(() => {
   const b = business.value!
@@ -85,6 +91,54 @@ onMounted(() => {
   if (business.value) recordBusinessView(business.value.id)
 })
 
+// --- Favourites (save button) ---
+
+const { isFavourited, toggle: toggleFavourite } = useFavourites()
+const favourited = computed(() => !!business.value && isFavourited(business.value.id))
+const favBusy = ref(false)
+const favError = ref('')
+
+async function handleToggleFavourite() {
+  if (!business.value) return
+  if (!user.value) {
+    await navigateTo({ path: '/login', query: { redirect: route.fullPath } })
+    return
+  }
+  favError.value = ''
+  favBusy.value = true
+  try {
+    await toggleFavourite(business.value.id)
+  } catch (error) {
+    favError.value = error instanceof Error ? error.message : 'Could not update favorites. Please try again.'
+  } finally {
+    favBusy.value = false
+  }
+}
+
+// --- Reviews ---
+// The reviews list and the caller's own review are two independent fetches
+// (see useReviews.ts): `myReview` decides which state the write/edit
+// affordance is in, `reviewsResult` is the full paginated list rendered via
+// ReviewCard (which — including for the caller's own review, if it's on
+// the current page — carries its own inline Edit/Delete; there's no
+// separate "your review" panel duplicating that here).
+
+const reviewsPage = ref(1)
+const { data: reviewsResult, status: reviewsStatus, refresh: refreshReviews } = useBusinessReviews(
+  () => business.value?.id ?? '',
+  reviewsPage,
+)
+const { data: myReview, refresh: refreshMyReview } = useMyReview(() => business.value?.id ?? '')
+const reviewsPending = computed(() => reviewsStatus.value === 'pending')
+
+async function refreshReviewData() {
+  await Promise.all([refreshReviews(), refreshMyReview(), refreshBusiness()])
+}
+
+function handleReviewChange() {
+  void refreshReviewData()
+}
+
 useSeoMeta({
   title: () => `${business.value?.name ?? 'Business'} — Zelp`,
   description: () => business.value?.description || `${business.value?.name} on Zelp — Zimbabwean business directory.`,
@@ -99,6 +153,19 @@ useSeoMeta({
         <h1 class="text-ink text-[28px] leading-[1.15] font-semibold sm:text-[32px]">
           {{ business.name }}
         </h1>
+
+        <div class="flex flex-col items-end gap-1">
+          <UButton
+            :icon="favourited ? 'i-lucide-heart' : 'i-lucide-heart'"
+            :label="favourited ? 'Saved' : 'Save'"
+            :color="favourited ? 'primary' : 'neutral'"
+            :variant="favourited ? 'subtle' : 'outline'"
+            :loading="favBusy"
+            :ui="{ leadingIcon: favourited ? 'fill-current' : '' }"
+            @click="handleToggleFavourite"
+          />
+          <span v-if="favError" class="text-closed-500 max-w-48 text-right text-xs">{{ favError }}</span>
+        </div>
       </div>
 
       <div v-if="business.categories.length" class="flex flex-wrap gap-1.5">
@@ -166,19 +233,74 @@ useSeoMeta({
         </div>
 
         <!--
-          Phase 4 hook: ReviewCard / ReviewForm / RatingStars(interactive)
-          render here, backed by the `reviews` table. `avgRating` and
-          `reviewCount` above already come from `businesses.avg_rating` /
-          `review_count`, which Phase 1's `update_business_rating()` trigger
-          keeps in sync — no extra fetch needed once review UI lands.
+          `avgRating` / `reviewCount` above already come from
+          `businesses.avg_rating` / `review_count`, which the
+          `update_business_rating()` trigger keeps in sync on every review
+          insert/update/delete — `refreshBusiness()` after a mutation is
+          all that's needed to pick up the new aggregate, no separate
+          computation here.
         -->
         <section>
-          <h2 class="text-ink mb-2 text-lg font-semibold">
+          <h2 class="text-ink mb-4 text-lg font-semibold">
             Reviews ({{ business.reviewCount }})
           </h2>
-          <p class="text-ink-muted text-sm">
-            Review submission is coming soon.
-          </p>
+
+          <!-- Write / edit / sign-in prompt. Deliberately not shown at all
+               to the owner (self-review is blocked at the DB level, but we
+               don't let them reach that error in the first place). When the
+               caller already has a review, no second form is shown here —
+               it appears (via ReviewCard's own Edit toggle, in the list
+               below) so it isn't duplicated on screen. -->
+          <div v-if="!user" class="border-line mb-6 rounded-[18px] border p-4 text-center">
+            <p class="text-ink-muted mb-3 text-sm">
+              Sign in to share your experience with this business.
+            </p>
+            <UButton
+              label="Sign in to write a review"
+              :to="{ path: '/login', query: { redirect: route.fullPath } }"
+            />
+          </div>
+          <div v-else-if="!isOwner && !myReview" class="mb-6">
+            <ReviewForm :business-id="business.id" @submitted="handleReviewChange" />
+          </div>
+
+          <div v-if="reviewsPending" class="flex flex-col divide-y divide-line">
+            <div v-for="i in 3" :key="i" class="flex items-center gap-3 py-5">
+              <USkeleton class="bg-ink-100 size-10 shrink-0 rounded-full" />
+              <div class="flex flex-1 flex-col gap-1.5">
+                <USkeleton class="bg-ink-100 h-3.5 w-32" />
+                <USkeleton class="bg-ink-100 h-3 w-20" />
+              </div>
+            </div>
+          </div>
+
+          <EmptyState
+            v-else-if="!reviewsResult.items.length"
+            icon="i-lucide-message-square"
+            title="No reviews yet"
+            description="Be the first to share your experience with this business."
+          />
+
+          <template v-else>
+            <div class="flex flex-col divide-y divide-line">
+              <ReviewCard
+                v-for="item in reviewsResult.items"
+                :key="item.id"
+                :review="item"
+                @updated="handleReviewChange"
+                @deleted="handleReviewChange"
+              />
+            </div>
+
+            <div class="mt-4 flex justify-center">
+              <Pagination
+                :page="reviewsResult.page"
+                :total="reviewsResult.total"
+                :page-size="reviewsResult.pageSize"
+                @update:page="(page) => (reviewsPage = page)"
+              />
+            </div>
+          </template>
         </section>
       </div>
 
