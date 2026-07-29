@@ -46,15 +46,7 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
 
 <template>
   <div class="mx-auto flex min-h-[calc(100vh-16rem)] max-w-md flex-col justify-center gap-6 px-5 py-12">
-    <!-- Chevron frieze — third of the three sanctioned uses of the brand
-         pattern (docs/zelp-brand-guidelines.md): a subtle top band. -->
-    <div class="h-5 w-full overflow-hidden rounded-full opacity-80" aria-hidden="true">
-      <img
-        src="/brand/zelp-pattern-chevron.svg"
-        alt=""
-        class="h-full w-full object-cover"
-      >
-    </div>
+    <BrandStripe class="w-full opacity-80" />
 
     <div class="text-center">
       <h1 class="text-2xl font-semibold">

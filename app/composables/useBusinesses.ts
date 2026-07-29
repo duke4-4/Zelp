@@ -1,5 +1,6 @@
 import type { MaybeRefOrGetter } from 'vue'
 import type { Database, BusinessImageKind } from '~~/types/database.types'
+import { demoBusinesses, demoCategories, getDemoBusiness, getDemoBusinessList } from '~/composables/useDemoContent'
 
 /**
  * Public, read-only business/category data access for the browse & search
@@ -180,7 +181,7 @@ export function useCategories() {
       .order('name', { ascending: true })
 
     if (error) throw error
-    return (data ?? []) as CategoryLite[]
+    return (data?.length ? data : demoCategories) as CategoryLite[]
   }, {
     default: () => [] as CategoryLite[],
     // Non-blocking: lets pages render their category-skeleton immediately
@@ -206,7 +207,7 @@ export function useHasAnyBusinesses() {
       .select('id', { count: 'exact', head: true })
 
     if (error) throw error
-    return (count ?? 0) > 0
+    return (count ?? 0) > 0 || demoBusinesses.length > 0
   }, {
     default: () => false,
     lazy: true,
@@ -277,7 +278,7 @@ export function useBusinessList(filters: MaybeRefOrGetter<BusinessListFilters>) 
         page,
         pageSize,
       }
-      return result
+      return result.total ? result : getDemoBusinessList(f)
     },
     {
       watch: [() => toValue(filters)],
@@ -319,7 +320,7 @@ export function useBusinessDetail(slug: MaybeRefOrGetter<string>) {
         .overrideTypes<RawBusinessDetailRow, { merge: false }>()
 
       if (error) throw error
-      if (!data) return null
+      if (!data) return getDemoBusiness(slugValue)
 
       return mapDetailRow(data)
     },
@@ -334,7 +335,7 @@ export function useBusinessDetail(slug: MaybeRefOrGetter<string>) {
  * this must not be able to break rendering the page it's attached to.
  */
 export function recordBusinessView(businessId: string): void {
-  if (!import.meta.client || !businessId) return
+  if (!import.meta.client || !businessId || businessId.startsWith('demo-')) return
 
   const supabase = useSupabaseClient<Database>()
   const user = useSupabaseUser()

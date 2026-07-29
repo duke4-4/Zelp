@@ -164,6 +164,27 @@
   }
 }
 
+@layer components {
+  .zelp-brand-stripe {
+    display: flex;
+    height: 4px;
+    overflow: hidden;
+    border-radius: 9999px;
+  }
+
+  .zelp-brand-stripe > span {
+    flex: 1 1 0%;
+  }
+}
+
+.splash-leave-active {
+  transition: opacity 180ms ease-out;
+}
+
+.splash-leave-to {
+  opacity: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

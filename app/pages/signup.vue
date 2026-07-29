@@ -60,14 +60,7 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
 
 <template>
   <div class="mx-auto flex min-h-[calc(100vh-16rem)] max-w-md flex-col justify-center gap-6 px-5 py-12">
-    <!-- Chevron frieze — subtle top band, same sanctioned use as /login. -->
-    <div class="h-5 w-full overflow-hidden rounded-full opacity-80" aria-hidden="true">
-      <img
-        src="/brand/zelp-pattern-chevron.svg"
-        alt=""
-        class="h-full w-full object-cover"
-      >
-    </div>
+    <BrandStripe class="w-full opacity-80" />
 
     <div class="text-center">
       <h1 class="text-2xl font-semibold">

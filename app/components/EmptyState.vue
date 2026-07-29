@@ -16,13 +16,7 @@ withDefaults(defineProps<{
 
 <template>
   <div class="flex flex-col items-center gap-4 py-12 text-center">
-    <div class="h-10 w-36 overflow-hidden rounded-full" aria-hidden="true">
-      <img
-        src="/brand/zelp-pattern-chevron.svg"
-        alt=""
-        class="h-full w-full object-cover"
-      >
-    </div>
+    <BrandStripe class="w-36" />
 
     <slot name="icon">
       <UIcon :name="icon" class="text-ink-faint size-8" />

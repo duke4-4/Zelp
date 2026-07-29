@@ -36,14 +36,14 @@ function isActiveTab(to: string) {
     <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
       <ULink to="/" class="shrink-0" aria-label="Zelp home">
         <img
-          src="/brand/zelp-logo-horizontal.svg"
+          src="/brand/zelp-icon.svg"
           alt="Zelp"
-          class="h-9 w-auto dark:hidden"
+          class="size-9 dark:hidden"
         >
         <img
-          src="/brand/zelp-logo-horizontal-white.svg"
+          src="/brand/zelp-icon-white.svg"
           alt="Zelp"
-          class="hidden h-9 w-auto dark:block"
+          class="hidden size-9 dark:block"
         >
       </ULink>
 

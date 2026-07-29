@@ -222,15 +222,7 @@ useSeoMeta({
           </p>
         </section>
 
-        <!-- Chevron frieze divider — the second of the three sanctioned
-             uses of the brand pattern (docs/zelp-brand-guidelines.md). -->
-        <div class="h-6 w-full overflow-hidden rounded-full" aria-hidden="true">
-          <img
-            src="/brand/zelp-pattern-chevron.svg"
-            alt=""
-            class="h-full w-full object-cover"
-          >
-        </div>
+        <BrandStripe />
 
         <!--
           `avgRating` / `reviewCount` above already come from
