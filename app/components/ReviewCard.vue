@@ -18,6 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const user = useSupabaseUser()
+const toast = useToast()
 const isOwnReview = computed(() => !!user.value && user.value.id === props.review.userId)
 
 const reviewerName = computed(() => props.review.reviewer.fullName || 'Zelp user')
@@ -41,6 +42,7 @@ async function confirmDelete() {
   isDeleting.value = true
   try {
     await deleteReview(props.review.id)
+    toast.add({ title: 'Review deleted', color: 'success', icon: 'i-lucide-check-circle' })
     emit('deleted', props.review.id)
   } catch (error) {
     deleteError.value = error instanceof Error ? error.message : 'Could not delete this review. Please try again.'

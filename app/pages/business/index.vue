@@ -7,14 +7,21 @@
 
 definePageMeta({
   middleware: 'auth',
+  robots: false,
 })
 
-const { data: businesses, status } = useMyBusinesses()
+const { data: businesses, status, refresh } = useMyBusinesses()
 const pending = computed(() => status.value === 'pending')
 const hasBusinesses = computed(() => businesses.value.length > 0)
+// Important here specifically: `useMyBusinesses` defaults to an empty list
+// on a failed fetch, which without this check would silently fall through
+// to the "list your first business" marketing CTA below -- actively
+// misleading for an owner who already has real listings and would read
+// that as "my businesses are gone", not "the fetch failed".
+const errored = computed(() => status.value === 'error')
 
 useSeoMeta({
-  title: 'Zelp for Business',
+  title: 'For Business',
   description: 'List and manage your business on Zelp.',
 })
 </script>
@@ -25,6 +32,17 @@ useSeoMeta({
       <USkeleton class="bg-ink-100 h-8 w-64" />
       <USkeleton class="bg-ink-100 h-24 w-full" />
     </div>
+
+    <EmptyState
+      v-else-if="errored"
+      icon="i-lucide-alert-triangle"
+      title="Couldn't load your businesses"
+      description="Something went wrong loading these. Please try again."
+    >
+      <template #actions>
+        <UButton label="Try again" variant="outline" color="neutral" @click="refresh()" />
+      </template>
+    </EmptyState>
 
     <template v-else>
       <!-- Management list, shown above the CTA once the owner has at least

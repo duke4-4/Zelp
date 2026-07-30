@@ -14,8 +14,10 @@ import type { UploadResult } from '~/composables/useUpload'
 
 definePageMeta({
   middleware: 'auth',
+  robots: false,
 })
 
+const toast = useToast()
 const logoUrl = ref<string | null>(null)
 const coverUrl = ref<string | null>(null)
 const galleryUrls = ref<string[]>([])
@@ -55,11 +57,15 @@ async function handleSubmitted(result: { id: string, slug: string }) {
     // block navigation, just surfaces in the console for debugging.
     console.error('[business/new] Failed to attach uploaded photos to the new business:', error)
   }
+  // A toast (rather than this page's own inline UAlert pattern) since the
+  // confirmation needs to survive the navigation below -- an inline message
+  // on this form would just be discarded before anyone saw it.
+  toast.add({ title: 'Business listing created', description: 'It\'s saved as a draft — request a review when you\'re ready to publish.', color: 'success', icon: 'i-lucide-check-circle' })
   await navigateTo({ path: '/business/dashboard', query: { business: result.id } })
 }
 
 useSeoMeta({
-  title: 'List your business — Zelp',
+  title: 'List your business',
 })
 </script>
 

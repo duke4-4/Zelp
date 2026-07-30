@@ -9,6 +9,7 @@ import type { UploadResult } from '~/composables/useUpload'
 
 definePageMeta({
   middleware: 'auth',
+  robots: false,
 })
 
 const { data: profile, status, refresh } = useMyProfile()
@@ -126,7 +127,7 @@ async function handleSignOut() {
 }
 
 useSeoMeta({
-  title: 'Edit profile — Zelp',
+  title: 'Edit profile',
 })
 </script>
 

@@ -13,11 +13,18 @@ useSeoMeta({
   description: 'Find and review trusted businesses across Zimbabwe — restaurants, salons, tradespeople and more, all in one place.',
 })
 
-const { data: categories, status: categoriesStatus } = useCategories()
-const { data: recentBusinesses, status: recentStatus } = useBusinessList({ sort: 'newest', pageSize: 8 })
+const { data: categories, status: categoriesStatus, refresh: refreshCategories } = useCategories()
+const { data: recentBusinesses, status: recentStatus, refresh: refreshRecent } = useBusinessList({ sort: 'newest', pageSize: 8 })
 
 const categoriesPending = computed(() => categoriesStatus.value === 'pending')
 const recentPending = computed(() => recentStatus.value === 'pending')
+// `status === 'error'` (not just an empty `data`) is what actually tells a
+// genuine "nothing here yet" apart from a failed fetch -- both of these
+// composables default to an empty array/result on error (so the page never
+// crashes), which would otherwise silently render as an honest-looking
+// empty state instead of the real fetch failure it is.
+const categoriesErrored = computed(() => categoriesStatus.value === 'error')
+const recentErrored = computed(() => recentStatus.value === 'error')
 </script>
 
 <template>
@@ -61,6 +68,17 @@ const recentPending = computed(() => recentStatus.value === 'pending')
       <div v-if="categoriesPending" class="flex gap-4 overflow-x-auto pb-1">
         <CategoryCardSkeleton v-for="i in 6" :key="i" />
       </div>
+
+      <EmptyState
+        v-else-if="categoriesErrored"
+        icon="i-lucide-alert-triangle"
+        title="Couldn't load categories"
+        description="Something went wrong loading these. Please try again."
+      >
+        <template #actions>
+          <UButton label="Try again" variant="outline" color="neutral" @click="refreshCategories()" />
+        </template>
+      </EmptyState>
 
       <EmptyState
         v-else-if="categories.length === 0"
@@ -107,6 +125,17 @@ const recentPending = computed(() => recentStatus.value === 'pending')
       <div v-if="recentPending" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <BusinessCardSkeleton v-for="i in 4" :key="i" />
       </div>
+
+      <EmptyState
+        v-else-if="recentErrored"
+        icon="i-lucide-alert-triangle"
+        title="Couldn't load businesses"
+        description="Something went wrong loading these. Please try again."
+      >
+        <template #actions>
+          <UButton label="Try again" variant="outline" color="neutral" @click="refreshRecent()" />
+        </template>
+      </EmptyState>
 
       <EmptyState
         v-else-if="recentBusinesses.items.length === 0"

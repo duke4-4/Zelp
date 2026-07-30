@@ -92,9 +92,14 @@ async function handleSaveClick(event: MouseEvent) {
         {{ business.categories.slice(0, 2).map(c => c.name).join(' · ') }}
       </p>
       <div class="flex items-start justify-between gap-2">
-        <h3 class="text-ink line-clamp-1 text-base font-medium">
+        <!-- h2, not h3: this card is used directly under a page's own h1 on
+             /search and /favorites (no intervening section h2 there), so h3
+             would skip a heading level on those pages. On the homepage,
+             where it does sit under a real h2 ("Recently added"), same-level
+             siblings are still valid heading order (no level is skipped). -->
+        <h2 class="text-ink line-clamp-1 text-base font-medium">
           {{ business.name }}
-        </h3>
+        </h2>
         <div v-if="business.avgRating > 0" class="text-gold-500 flex shrink-0 items-center gap-1 text-sm">
           <UIcon name="i-lucide-star" class="size-3.5" />
           <span class="text-ink tabular-nums font-medium">{{ business.avgRating.toFixed(1) }}</span>

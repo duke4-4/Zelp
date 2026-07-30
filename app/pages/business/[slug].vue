@@ -208,7 +208,6 @@ useSeoMeta({
       ? truncateDescription(b.description)
       : `See reviews, hours and contact details for ${b.name} on Zelp.`
   },
-  ogType: 'business.business',
   ogUrl: canonicalBusinessUrl,
   // Falls through to the site-wide default (app.vue) when this business has
   // no cover photo of its own -- computed getters returning `undefined`
@@ -219,6 +218,10 @@ useSeoMeta({
 
 useHead({
   link: [{ rel: 'canonical', href: canonicalBusinessUrl }],
+  // `useSeoMeta`'s `ogType` is typed to unhead's core OpenGraph type union,
+  // which doesn't include the Facebook "business" vertical's
+  // `business.business` type -- set as a raw meta tag instead.
+  meta: [{ property: 'og:type', content: 'business.business' }],
 })
 
 // JSON-LD LocalBusiness -- every field is either a real value from this

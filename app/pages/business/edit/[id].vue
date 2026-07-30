@@ -9,9 +9,11 @@ import type { UploadResult } from '~/composables/useUpload'
 
 definePageMeta({
   middleware: ['auth', 'business-owner'],
+  robots: false,
 })
 
 const route = useRoute()
+const toast = useToast()
 const businessId = computed(() => String(route.params.id))
 
 const { data: business, error: fetchError, refresh } = await useOwnedBusiness(businessId)
@@ -61,6 +63,10 @@ async function withdrawToDraft() {
 
 async function handleSubmitted() {
   await refresh()
+  // Toast rather than this page's own inline UAlert pattern (same reasoning
+  // as business/new.vue): the confirmation needs to outlive the navigation
+  // below.
+  toast.add({ title: 'Business updated', color: 'success', icon: 'i-lucide-check-circle' })
   await navigateTo({ path: '/business/dashboard', query: { business: businessId.value } })
 }
 
@@ -152,7 +158,7 @@ async function handleGalleryAdd(result: UploadResult) {
 }
 
 useSeoMeta({
-  title: () => `Edit ${business.value?.name ?? 'business'} — Zelp`,
+  title: () => `Edit ${business.value?.name ?? 'business'}`,
 })
 </script>
 

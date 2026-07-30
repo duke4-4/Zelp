@@ -18,6 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const isEditMode = computed(() => !!props.existingReview)
+const toast = useToast()
 
 const rating = ref(props.existingReview?.rating ?? 0)
 const comment = ref(props.existingReview?.comment ?? '')
@@ -47,6 +48,15 @@ async function handleSubmit() {
     const result = isEditMode.value && props.existingReview
       ? await updateReview(props.existingReview.id, rating.value, trimmedComment)
       : await createReview(props.businessId, rating.value, trimmedComment)
+    // A toast here (rather than an inline UAlert like the rest of the app's
+    // forms) because this form disappears/gets replaced by the reviews list
+    // the instant it succeeds -- there's no page left for an inline success
+    // message to live on.
+    toast.add({
+      title: isEditMode.value ? 'Review updated' : 'Review posted',
+      color: 'success',
+      icon: 'i-lucide-check-circle',
+    })
     emit('submitted', result)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Something went wrong. Please try again.'

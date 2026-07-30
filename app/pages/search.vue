@@ -31,9 +31,13 @@ const filtersValue = computed<FiltersValue>(() => ({
   sort: filters.value.sort,
 }))
 
-const { data: results, status } = useBusinessList(filters)
+const { data: results, status, refresh: refreshResults } = useBusinessList(filters)
 const { data: hasAnyBusinesses } = useHasAnyBusinesses()
 const pending = computed(() => status.value === 'pending')
+// See index.vue's own comment on this: `useBusinessList` defaults to an
+// empty result on a failed fetch, which would otherwise silently read as a
+// genuine "no matches" empty state rather than the real error it is.
+const errored = computed(() => status.value === 'error')
 
 useSeoMeta({
   title: () => filters.value.q ? `"${filters.value.q}" — Search` : 'Search businesses',
@@ -123,6 +127,17 @@ const emptyStateCopy = computed(() => {
     <div v-if="pending" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <BusinessCardSkeleton v-for="i in 6" :key="i" />
     </div>
+
+    <EmptyState
+      v-else-if="errored"
+      icon="i-lucide-alert-triangle"
+      title="Couldn't load results"
+      description="Something went wrong loading businesses. Please try again."
+    >
+      <template #actions>
+        <UButton label="Try again" variant="outline" color="neutral" @click="refreshResults()" />
+      </template>
+    </EmptyState>
 
     <EmptyState
       v-else-if="results.items.length === 0"

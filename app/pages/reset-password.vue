@@ -81,6 +81,10 @@ onMounted(() => {
     clearTimeout(timeout)
   })
 })
+
+useSeoMeta({
+  title: 'Choose a new password',
+})
 </script>
 
 <template>

@@ -5,13 +5,18 @@
 
 definePageMeta({
   middleware: 'auth',
+  robots: false,
 })
 
-const { data: favourites, status } = useMyFavourites()
+const { data: favourites, status, refresh } = useMyFavourites()
 const pending = computed(() => status.value === 'pending')
+// See index.vue's/search.vue's own comment on this pattern: `useMyFavourites`
+// defaults to an empty list on a failed fetch, which would otherwise
+// silently read as "nothing saved yet" instead of the real error it is.
+const errored = computed(() => status.value === 'error')
 
 useSeoMeta({
-  title: 'Your favorites — Zelp',
+  title: 'Your favorites',
   description: 'Businesses you\'ve saved on Zelp.',
 })
 </script>
@@ -25,6 +30,17 @@ useSeoMeta({
     <div v-if="pending" class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
       <BusinessCardSkeleton v-for="i in 6" :key="i" />
     </div>
+
+    <EmptyState
+      v-else-if="errored"
+      icon="i-lucide-alert-triangle"
+      title="Couldn't load your favorites"
+      description="Something went wrong loading these. Please try again."
+    >
+      <template #actions>
+        <UButton label="Try again" variant="outline" color="neutral" @click="refresh()" />
+      </template>
+    </EmptyState>
 
     <EmptyState
       v-else-if="favourites.length === 0"

@@ -5,6 +5,7 @@
 
 definePageMeta({
   middleware: 'auth',
+  robots: false,
 })
 
 const { data: profile, status } = useMyProfile()
@@ -17,7 +18,7 @@ const socialEntries = computed(() => {
 })
 
 useSeoMeta({
-  title: 'Your profile — Zelp',
+  title: 'Your profile',
   description: 'Your Zelp account profile.',
 })
 </script>

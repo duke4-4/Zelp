@@ -16,11 +16,17 @@
 
 definePageMeta({
   middleware: 'auth',
+  robots: false,
 })
 
 const route = useRoute()
-const { data: businesses, status } = useMyBusinesses()
+const { data: businesses, status, refresh: refreshBusinesses } = useMyBusinesses()
 const pending = computed(() => status.value === 'pending')
+// Same reasoning as business/index.vue: on a failed fetch `businesses`
+// defaults to `[]`, which without this check would fall through to "you
+// don't own any businesses yet" -- misleading for an owner who actually has
+// listings, not just an empty inbox.
+const errored = computed(() => status.value === 'error')
 
 const requestedId = computed(() => (typeof route.query.business === 'string' ? route.query.business : null))
 
@@ -121,7 +127,7 @@ const attentionItems = computed<AttentionItem[]>(() => {
 })
 
 useSeoMeta({
-  title: () => selectedBusiness.value ? `${selectedBusiness.value.name} dashboard — Zelp` : 'Business dashboard — Zelp',
+  title: () => selectedBusiness.value ? `${selectedBusiness.value.name} dashboard` : 'Business dashboard',
 })
 </script>
 
@@ -133,6 +139,17 @@ useSeoMeta({
         <USkeleton v-for="i in 4" :key="i" class="bg-ink-100 h-20 w-full" />
       </div>
     </div>
+
+    <EmptyState
+      v-else-if="errored"
+      icon="i-lucide-alert-triangle"
+      title="Couldn't load your businesses"
+      description="Something went wrong loading these. Please try again."
+    >
+      <template #actions>
+        <UButton label="Try again" variant="outline" color="neutral" @click="refreshBusinesses()" />
+      </template>
+    </EmptyState>
 
     <EmptyState
       v-else-if="businesses.length === 0"
