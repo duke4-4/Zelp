@@ -1,6 +1,5 @@
 import type { MaybeRefOrGetter } from 'vue'
 import type { Database, BusinessImageKind } from '~~/types/database.types'
-import { demoBusinesses, demoCategories, getDemoBusiness, getDemoBusinessList } from '~/composables/useDemoContent'
 
 /**
  * Public, read-only business/category data access for the browse & search
@@ -180,8 +179,8 @@ export function useCategories() {
       .select('id, name, slug, icon')
       .order('name', { ascending: true })
 
-    if (error) return demoCategories
-    return (data?.length ? data : demoCategories) as CategoryLite[]
+    if (error) throw error
+    return (data ?? []) as CategoryLite[]
   }, {
     default: () => [] as CategoryLite[],
     // Non-blocking: lets pages render their category-skeleton immediately
@@ -206,8 +205,8 @@ export function useHasAnyBusinesses() {
       .from('businesses')
       .select('id', { count: 'exact', head: true })
 
-    if (error) return demoBusinesses.length > 0
-    return (count ?? 0) > 0 || demoBusinesses.length > 0
+    if (error) throw error
+    return (count ?? 0) > 0
   }, {
     default: () => false,
     lazy: true,
@@ -270,7 +269,7 @@ export function useBusinessList(filters: MaybeRefOrGetter<BusinessListFilters>) 
       const { data, error, count } = await query
         .overrideTypes<RawBusinessListRow[], { merge: false }>()
 
-      if (error) return getDemoBusinessList(f)
+      if (error) throw error
 
       const result: BusinessListResult = {
         items: (data ?? []).map(mapListRow),
@@ -278,7 +277,7 @@ export function useBusinessList(filters: MaybeRefOrGetter<BusinessListFilters>) 
         page,
         pageSize,
       }
-      return result.total ? result : getDemoBusinessList(f)
+      return result
     },
     {
       watch: [() => toValue(filters)],
@@ -319,8 +318,8 @@ export function useBusinessDetail(slug: MaybeRefOrGetter<string>) {
         .maybeSingle()
         .overrideTypes<RawBusinessDetailRow, { merge: false }>()
 
-      if (error) return getDemoBusiness(slugValue)
-      if (!data) return getDemoBusiness(slugValue)
+      if (error) throw error
+      if (!data) return null
 
       return mapDetailRow(data)
     },
@@ -335,7 +334,7 @@ export function useBusinessDetail(slug: MaybeRefOrGetter<string>) {
  * this must not be able to break rendering the page it's attached to.
  */
 export function recordBusinessView(businessId: string): void {
-  if (!import.meta.client || !businessId || businessId.startsWith('demo-')) return
+  if (!import.meta.client || !businessId) return
 
   const supabase = useSupabaseClient<Database>()
   const user = useSupabaseUser()

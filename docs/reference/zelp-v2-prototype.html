@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zelp — find what's good near you</title>
+<meta name="theme-color" content="#D9502B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet">
+<style>
+/* ================= 1. TOKENS ================= */
+:root{
+  --flame:#D9502B; --flame-press:#C23C1B; --flame-tint:#FDF0EA;
+  --gold:#F2B133; --gold-tint:#FEF6E6;
+  --ink:#15201B; --ink-2:#55605A; --ink-3:#8A938E;
+  --green:#2E6A52; --green-tint:#E8F1ED;
+  --closed:#A33A22; --amber:#8A6A18; --amber-tint:#FBF3DE;
+  --stone:#F7F1E7; --surface:#FFFFFF; --line:#EAE4D9; --line-2:#F3EEE6;
+  --skel:#EDE6DA; --skel-hi:#F7F2EA;
+  /* national colours — flag line ONLY, never anywhere else */
+  --zw-g:#319B42; --zw-y:#FFD200; --zw-r:#DE2010; --zw-k:#101010;
+  --sh-1:0 1px 2px rgba(21,32,27,.06); --sh-2:0 10px 32px rgba(21,32,27,.12);
+  --dur:180ms;
+  --display:"Outfit",ui-rounded,system-ui,sans-serif;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+[data-theme="dark"]{
+  --flame:#E8663F; --flame-press:#D9502B; --flame-tint:#2B1A14;
+  --gold:#EFBA5B; --gold-tint:#2E2413;
+  --ink:#F1EEE6; --ink-2:#A6B0A8; --ink-3:#7A857D;
+  --green:#5AA383; --green-tint:#16291F;
+  --closed:#E07257; --amber:#E0BE6A; --amber-tint:#2A2314;
+  --stone:#101512; --surface:#19201C; --line:#2A332D; --line-2:#222A25;
+  --skel:#232C27; --skel-hi:#2C362F;
+  --sh-1:0 1px 2px rgba(0,0,0,.5); --sh-2:0 10px 32px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--stone);color:var(--ink);font-family:var(--body);font-size:16px;
+  line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit;background:none;border:0;margin:0;padding:0}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--flame);outline-offset:2px;border-radius:8px}
+h1,h2,h3,h4{margin:0;font-family:var(--display);letter-spacing:-.02em}
+p{margin:0}
+.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;
+  stroke-linejoin:round;flex:0 0 auto}
+.num{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ================= 2. FLAG LINE ================= */
+.flagline{height:3px;flex:0 0 auto;background:linear-gradient(to right,
+  var(--zw-g) 0 14.28%, var(--zw-y) 14.28% 28.57%, var(--zw-r) 28.57% 42.85%,
+  var(--zw-k) 42.85% 57.14%, var(--zw-r) 57.14% 71.42%, var(--zw-y) 71.42% 85.71%, var(--zw-g) 85.71% 100%)}
+.flagline.tall{height:5px}
+
+/* ================= 3. SPLASH ================= */
+.splash{position:fixed;inset:0;z-index:900;display:flex;flex-direction:column;
+  background:linear-gradient(165deg,#E2622C,#C23C1B 55%,#8E2A12);color:#fff;
+  transition:opacity 520ms ease,visibility 520ms}
+.splash.gone{opacity:0;visibility:hidden;pointer-events:none}
+.splash-art{position:absolute;inset:0;overflow:hidden;opacity:.20}
+.splash-art svg{position:absolute;width:60%;height:auto}
+.splash-body{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:18px;padding:24px;text-align:center}
+.splash-logo{width:180px;animation:rise 700ms cubic-bezier(.2,.9,.3,1) both}
+.splash-tag{font-family:var(--serif);font-size:27px;font-weight:400;line-height:1.2;max-width:15ch;
+  animation:rise 700ms 120ms cubic-bezier(.2,.9,.3,1) both}
+.splash-cities{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.72;
+  animation:rise 700ms 240ms cubic-bezier(.2,.9,.3,1) both}
+.splash-foot{position:relative;padding:0 0 30px;text-align:center;font-size:12.5px;opacity:.75}
+.loadbar{width:132px;height:3px;border-radius:99px;background:rgba(255,255,255,.28);margin:0 auto 14px;overflow:hidden}
+.loadbar i{display:block;height:100%;width:40%;background:#fff;border-radius:99px;animation:slide 1.15s infinite}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes slide{0%{transform:translateX(-110%)}100%{transform:translateX(360%)}}
+
+/* ================= 4. SHELL ================= */
+.shell{display:grid;grid-template-columns:1fr;min-height:100dvh}
+.side{display:none}
+.main{min-width:0;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+@media (min-width:980px){
+  .shell{grid-template-columns:252px 1fr}
+  .main{padding-bottom:0}
+  .side{display:flex}
+}
+.side{flex-direction:column;gap:3px;padding:20px 13px;background:var(--surface);
+  border-right:1px solid var(--line);position:sticky;top:0;height:100dvh;overflow-y:auto}
+.side .logo{padding:2px 10px 20px}
+.side .logo svg{width:104px;height:auto;display:block}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;
+  font-size:14.5px;font-weight:500;color:var(--ink-2);width:100%;text-align:left;
+  transition:background var(--dur),color var(--dur)}
+.nav-item:hover{background:var(--line-2);color:var(--ink)}
+.nav-item.on{background:var(--flame-tint);color:var(--flame);font-weight:600}
+.nav-sep{font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);padding:18px 12px 8px}
+.side-foot{margin-top:auto;padding-top:14px}
+.mode-card{background:var(--stone);border-radius:14px;padding:13px;margin-top:10px}
+.mode-card b{display:block;font-size:13.5px;font-weight:600;margin-bottom:3px}
+.mode-card span{display:block;font-size:12px;color:var(--ink-3);margin-bottom:10px;line-height:1.4}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:60;display:grid;grid-template-columns:repeat(5,1fr);
+  background:var(--surface);border-top:1px solid var(--line);padding:8px 4px calc(8px + env(safe-area-inset-bottom))}
+@media (min-width:980px){.tabs{display:none}}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 0;font-size:10.5px;
+  font-weight:600;color:var(--ink-3)}
+.tab.on{color:var(--flame)}
+.tab .i{width:22px;height:22px}
+
+/* ================= 5. PRIMITIVES ================= */
+.wrap{padding:0 18px;max-width:1180px;margin:0 auto}
+@media (min-width:980px){.wrap{padding:0 34px}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;
+  padding:13px 22px;font-weight:600;font-size:15px;transition:background var(--dur),transform var(--dur),border-color var(--dur)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--flame);color:#fff}
+.btn-primary:hover{background:var(--flame-press)}
+.btn-primary[disabled]{background:var(--line);color:var(--ink-3);cursor:not-allowed}
+.btn-quiet{background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+.btn-quiet:hover{border-color:var(--ink-3)}
+.btn-sm{padding:9px 16px;font-size:13.5px}
+.btn-block{width:100%}
+.chip{flex:0 0 auto;padding:9px 15px;border-radius:999px;background:var(--surface);border:1px solid var(--line);
+  font-size:13.5px;font-weight:600;color:var(--ink-2);white-space:nowrap;transition:all var(--dur)}
+.chip:hover{border-color:var(--ink-3)}
+.chip.on{background:var(--flame-tint);border-color:var(--flame);color:var(--flame)}
+.rail{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.rail::-webkit-scrollbar{display:none}
+.iconbtn{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--surface);
+  border:1px solid var(--line);color:var(--ink);transition:all var(--dur)}
+.iconbtn:hover{background:var(--flame-tint);border-color:var(--flame);color:var(--flame)}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.h-sec{font-size:19px;font-weight:600;margin:0 0 14px}
+.h-ed{font-family:var(--serif);font-weight:600;letter-spacing:-.01em}
+.card-surface{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.frieze{height:10px;background-size:20px 10px;background-repeat:repeat-x;opacity:.45;
+  background-image:linear-gradient(135deg,var(--flame) 26%,transparent 26%),
+                   linear-gradient(225deg,var(--flame) 26%,transparent 26%)}
+.notice{display:flex;gap:12px;background:var(--amber-tint);border:1px solid rgba(138,106,24,.28);
+  border-radius:14px;padding:14px 16px;font-size:13.5px;color:var(--amber);line-height:1.55}
+.notice b{color:var(--amber)}
+
+/* ================= 6. PICTURE SYSTEM ================= */
+.ph{position:relative;overflow:hidden;border-radius:14px;display:block;
+  background:linear-gradient(158deg,var(--a,#EFC9A6),var(--b,#C4703F))}
+.ph::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(112% 74% at 22% 8%,rgba(255,255,255,.34),transparent 62%),
+             linear-gradient(0deg,rgba(20,12,6,.20),transparent 46%)}
+.ph .scene{position:absolute;inset:0;width:100%;height:100%}
+.s-dk{fill:#1A0F07;opacity:.34}
+.s-md{fill:#2A1608;opacity:.19}
+.s-lt{fill:#FFF6EA;opacity:.34}
+.s-sun{fill:#FFF3DE;opacity:.5}
+.overlay-txt{position:absolute;left:0;right:0;bottom:0;padding:20px;color:#fff;z-index:2;
+  background:linear-gradient(0deg,rgba(12,8,4,.76),rgba(12,8,4,.22) 62%,transparent)}
+
+/* ================= 7. TOP BAR ================= */
+.topbar{position:sticky;top:0;z-index:50;background:var(--surface);padding:12px 0 0}
+.topbar-btm{border-bottom:1px solid var(--line)}
+.topbar-row{display:flex;align-items:center;gap:10px}
+.mob-logo svg{width:82px;height:auto;display:block}
+@media (min-width:980px){.mob-logo{display:none}}
+.search{flex:1;min-width:0;display:flex;align-items:center;gap:10px;border-radius:999px;background:var(--surface);
+  border:1.5px solid var(--line);padding:9px 8px 9px 15px;box-shadow:var(--sh-1);transition:all var(--dur)}
+.search:focus-within{border-color:var(--flame);box-shadow:var(--sh-2)}
+.search input{flex:1;min-width:0;font-size:14.5px}
+.search input::placeholder{color:var(--ink-3)}
+.divider{width:1px;height:22px;background:var(--line)}
+
+/* ================= 8. CARDS ================= */
+.grid-cards{display:grid;gap:16px;grid-template-columns:repeat(2,1fr)}
+@media (min-width:660px){.grid-cards{grid-template-columns:repeat(3,1fr)}}
+@media (min-width:980px){.grid-cards{grid-template-columns:repeat(4,1fr);gap:22px}}
+.card{position:relative;display:flex;flex-direction:column;gap:9px;text-align:left;width:100%}
+.card .ph{aspect-ratio:4/3;transition:transform var(--dur)}
+.card:hover .ph{transform:translateY(-3px)}
+.save{position:absolute;top:8px;right:8px;z-index:3;width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;background:rgba(255,255,255,.93);color:var(--ink);
+  transition:transform var(--dur),background var(--dur)}
+.save:hover{transform:scale(1.08)}
+.save .i{width:17px;height:17px}
+.save.on{background:var(--flame);color:#fff}
+.save.on .i{fill:currentColor}
+.save.pending{animation:pulse 900ms infinite}
+@keyframes pulse{50%{opacity:.45}}
+.card-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.card-name{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rate{display:inline-flex;align-items:center;gap:3px;font-weight:600;font-size:14px;flex:0 0 auto}
+.rate .i{width:14px;height:14px;fill:var(--gold);stroke:none}
+.card-sub{font-size:13px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600}
+.status.open{color:var(--green)} .status.shut{color:var(--closed)}
+.status .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill-ph{position:absolute;left:10px;bottom:10px;z-index:2;background:rgba(12,8,4,.62);color:#fff;
+  border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:600;backdrop-filter:blur(3px)}
+
+/* editorial hero rail */
+.hero-rail{display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;padding:0 18px 4px;scroll-snap-type:x mandatory}
+.hero-rail::-webkit-scrollbar{display:none}
+@media (min-width:980px){.hero-rail{padding:0 34px 4px}}
+.hero-card{flex:0 0 84%;max-width:520px;scroll-snap-align:start;position:relative;border-radius:20px;
+  overflow:hidden;aspect-ratio:16/10;text-align:left}
+@media (min-width:660px){.hero-card{flex:0 0 46%}}
+@media (min-width:980px){.hero-card{flex:0 0 33%}}
+.hero-card .ph{position:absolute;inset:0;border-radius:0;transition:transform 400ms}
+.hero-card:hover .ph{transform:scale(1.04)}
+.hero-card h3{font-family:var(--serif);font-weight:600;font-size:23px;line-height:1.15;margin-bottom:4px}
+.hero-card p{font-size:13px;opacity:.86}
+
+/* ================= 9. SKELETONS ================= */
+.sk{position:relative;overflow:hidden;background:var(--skel);border-radius:8px}
+.sk::after{content:"";position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,var(--skel-hi),transparent);animation:shimmer 1.25s infinite}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+.sk-ph{aspect-ratio:4/3;border-radius:14px}
+.sk-l{height:12px;border-radius:99px}
+.sk-stack{display:flex;flex-direction:column;gap:8px}
+
+/* ================= 10. SEARCH / MAP ================= */
+.split{display:grid;grid-template-columns:1fr}
+@media (min-width:980px){.split{grid-template-columns:minmax(400px,46%) 1fr}}
+.row-card{display:grid;grid-template-columns:108px 1fr;gap:14px;padding:14px 0;width:100%;text-align:left;
+  border-bottom:1px solid var(--line);transition:background var(--dur)}
+.row-card:hover,.row-card.hot{background:var(--flame-tint);border-radius:14px;
+  box-shadow:0 0 0 8px var(--flame-tint);border-bottom-color:transparent}
+.row-card .ph{aspect-ratio:1;border-radius:12px}
+.row-body{display:flex;flex-direction:column;gap:5px;min-width:0;justify-content:center}
+.badges{display:flex;gap:5px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--line-2);color:var(--ink-2)}
+.badge.ok{background:var(--green-tint);color:var(--green)}
+.map-pane{display:none}
+@media (min-width:980px){.map-pane{display:block;position:sticky;top:0;height:100dvh}}
+.map{position:relative;width:100%;height:100%;overflow:hidden;background:
+  linear-gradient(0deg,rgba(46,106,82,.07),rgba(46,106,82,.07)),
+  repeating-linear-gradient(0deg,transparent 0 46px,var(--line) 46px 47px),
+  repeating-linear-gradient(90deg,transparent 0 46px,var(--line) 46px 47px),var(--stone)}
+.road{position:absolute;background:var(--surface);border-radius:2px}
+.pin{position:absolute;transform:translate(-50%,-100%);width:30px;z-index:1;
+  filter:drop-shadow(0 4px 8px rgba(21,32,27,.25));transition:transform var(--dur)}
+.pin:hover,.pin.hot{transform:translate(-50%,-100%) scale(1.3);z-index:3}
+.pin.hot .pin-bg{fill:var(--ink)}
+.map-tools{position:absolute;top:16px;right:16px;display:flex;flex-direction:column;gap:8px}
+.map-note{position:absolute;left:16px;bottom:16px;background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;padding:9px 14px;font-size:12.5px;color:var(--ink-2);box-shadow:var(--sh-1)}
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom));
+  z-index:55;background:var(--ink);color:var(--stone);border-radius:999px;padding:12px 20px;font-size:14px;
+  font-weight:600;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--sh-2)}
+@media (min-width:980px){.fab{display:none}}
+
+/* ================= 11. DETAIL ================= */
+.mosaic{display:grid;gap:6px;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;aspect-ratio:16/9}
+@media (max-width:659px){.mosaic{grid-template-columns:2fr 1fr;aspect-ratio:5/4}}
+.mosaic .ph{border-radius:0;height:100%}
+.mosaic .ph:first-child{grid-row:span 2}
+@media (max-width:659px){.mosaic .ph:nth-child(n+4){display:none}}
+.detail-head{position:relative}
+.float-back{position:absolute;top:14px;left:14px;z-index:5;background:rgba(255,255,255,.94);color:#15201B}
+.float-save{position:absolute;top:14px;right:14px;z-index:5;background:rgba(255,255,255,.94);color:#15201B}
+.float-save.on{background:var(--flame);color:#fff}
+.float-save.on .i{fill:currentColor}
+.gallery-pill{position:absolute;right:14px;bottom:14px;background:rgba(21,32,27,.78);color:#fff;
+  border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:600}
+.detail-body{background:var(--surface);border-radius:22px 22px 0 0;margin-top:-20px;position:relative;z-index:2;padding-top:22px}
+@media (min-width:980px){
+  .detail-body{border-radius:0;margin-top:0;padding-top:28px}
+  .detail-grid{display:grid;grid-template-columns:1fr 336px;gap:44px;align-items:start}
+  .detail-aside{position:sticky;top:24px}
+}
+.act-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.act{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border:1px solid var(--line);
+  border-radius:14px;font-size:11.5px;font-weight:600;color:var(--ink-2);transition:all var(--dur)}
+.act:hover{border-color:var(--flame);color:var(--flame);background:var(--flame-tint)}
+.hr{height:1px;background:var(--line);margin:22px 0}
+.dist{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:12px;color:var(--ink-3)}
+.dist .track{height:8px;background:var(--line-2);border-radius:99px;overflow:hidden}
+.dist .fill{height:100%;background:var(--gold);border-radius:99px}
+.photostrip{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.photostrip::-webkit-scrollbar{display:none}
+.photostrip .ph{flex:0 0 118px;aspect-ratio:1;border-radius:12px}
+.review{padding:17px 0;border-top:1px solid var(--line-2)}
+.review:first-child{border-top:0}
+.review.pending{opacity:.55}
+.rev-head{display:flex;gap:11px;align-items:center;margin-bottom:9px}
+.av{width:38px;height:38px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;font-weight:700;
+  font-size:14px;color:#fff;font-family:var(--display)}
+.stars{display:inline-flex;gap:1px}
+.stars .i{width:13px;height:13px;stroke:none;fill:var(--gold)}
+.stars .i.off{fill:var(--line)}
+.rev-acts{display:flex;gap:16px;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--ink-3)}
+.rev-acts button:hover{color:var(--flame)}
+.owner-reply{margin:12px 0 0 28px;padding:12px 14px;background:var(--stone);border-radius:14px;
+  border-left:3px solid var(--flame)}
+.owner-reply.pending{opacity:.55}
+.tagchip{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--gold-tint);color:var(--amber)}
+.sticky-cta{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom));z-index:40;padding:0 0 14px}
+@media (min-width:980px){.sticky-cta{display:none}}
+
+/* ================= 12. BUSINESS ================= */
+.biz-hero{position:relative;overflow:hidden;border-radius:0;padding:44px 0 48px;
+  background:linear-gradient(160deg,var(--ink),#1E2E26)}
+[data-theme="dark"] .biz-hero{background:linear-gradient(160deg,#1D2721,#121A16)}
+.biz-hero h1{color:#F7F1E7;font-size:clamp(28px,5vw,40px);line-height:1.1;max-width:16ch}
+.biz-hero p{color:rgba(247,241,231,.76);max-width:46ch;margin-top:12px;font-size:15.5px}
+.stat-grid{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}
+@media (min-width:760px){.stat-grid{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.stat .k{font-size:11.5px;font-weight:600;color:var(--ink-3);letter-spacing:.04em}
+.stat .v{font-family:var(--display);font-size:27px;font-weight:600;line-height:1.1;margin:4px 0 2px}
+.delta{font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:3px}
+.delta.up{color:var(--green)} .delta.down{color:var(--closed)}
+.spark{margin-top:8px;width:100%;height:26px;display:block}
+.chart{width:100%;height:170px;display:block}
+.chart .bar{fill:var(--flame);opacity:.85;transition:opacity var(--dur)}
+.chart .bar:hover{opacity:1}
+.chart text{font-size:9px;fill:var(--ink-3);font-family:var(--body)}
+.todo{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line);
+  border-radius:14px;background:var(--surface);margin-bottom:10px}
+.todo .dotm{width:8px;height:8px;border-radius:50%;background:var(--flame);margin-top:7px;flex:0 0 auto}
+.hours-row{display:grid;grid-template-columns:96px 1fr auto;gap:12px;align-items:center;
+  padding:11px 0;border-bottom:1px solid var(--line-2);font-size:14px}
+.inp{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;font-size:14.5px;
+  background:var(--stone);color:var(--ink)}
+.inp:focus{outline:none;border-color:var(--flame);background:var(--surface)}
+.photo-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.photo-tiles .add{border:1.5px dashed var(--line);border-radius:14px;aspect-ratio:1;display:grid;
+  place-items:center;color:var(--ink-3);gap:6px}
+.photo-tiles .add:hover{border-color:var(--flame);color:var(--flame)}
+
+/* ================= 13. SHEETS / TOAST ================= */
+.scrim{position:fixed;inset:0;background:rgba(21,32,27,.5);opacity:0;pointer-events:none;
+  transition:opacity 260ms;z-index:200;backdrop-filter:blur(2px)}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:210;margin:0 auto;max-width:560px;background:var(--surface);
+  border-radius:24px 24px 0 0;transform:translateY(102%);transition:transform 300ms cubic-bezier(.2,.9,.25,1);
+  max-height:90dvh;overflow-y:auto;padding:0 20px calc(24px + env(safe-area-inset-bottom))}
+.sheet.on{transform:translateY(0)}
+.sheet-grip{padding:14px 0 6px;display:grid;place-items:center}
+.sheet-grip i{width:40px;height:4px;border-radius:99px;background:var(--line);display:block}
+.sheet h2{font-size:23px;font-weight:600;margin:8px 0 4px}
+.sheet .lede{color:var(--ink-2);font-size:14.5px;margin:0 0 18px}
+.field{margin-bottom:18px}
+.field label{display:block;font-weight:600;font-size:14px;margin-bottom:8px}
+.ta{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:13px;font-size:14.5px;resize:vertical;
+  min-height:104px;background:var(--stone);color:var(--ink)}
+.ta:focus{outline:none;border-color:var(--flame);background:var(--surface)}
+.starpick{display:flex;gap:8px}
+.starpick button{padding:4px}
+.starpick .i{width:34px;height:34px;stroke:none;fill:var(--line);transition:all var(--dur)}
+.starpick button:hover .i{transform:scale(1.12)}
+.starpick .i.on{fill:var(--gold)}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line-2)}
+.opt b{font-weight:600;font-size:14.5px;display:block}
+.opt span{font-size:12.5px;color:var(--ink-3)}
+.sw{width:48px;height:28px;border-radius:99px;background:var(--line);position:relative;flex:0 0 auto;transition:background var(--dur)}
+.sw i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;
+  box-shadow:var(--sh-1);transition:transform var(--dur)}
+.sw.on{background:var(--flame)} .sw.on i{transform:translateX(20px)}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translate(-50%,10px);
+  background:var(--ink);color:var(--stone);padding:11px 18px;border-radius:999px;font-size:14px;font-weight:600;
+  opacity:0;pointer-events:none;transition:all 220ms;z-index:300;display:flex;align-items:center;gap:9px;max-width:88vw}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.bad{background:var(--closed);color:#fff}
+.toast button{color:inherit;text-decoration:underline;font-weight:700;font-size:13.5px}
+
+/* ================= 14. FOOTER + LEGAL ================= */
+.foot{background:var(--surface);border-top:1px solid var(--line);margin-top:44px}
+.foot-grid{display:grid;gap:28px;grid-template-columns:repeat(2,1fr);padding:34px 0 26px}
+@media (min-width:760px){.foot-grid{grid-template-columns:1.4fr repeat(4,1fr);gap:32px}}
+.foot h4{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px}
+.foot ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.foot a,.foot button{font-size:13.5px;color:var(--ink-2);text-decoration:none;text-align:left}
+.foot a:hover,.foot button:hover{color:var(--flame)}
+.foot-brand svg{width:96px;height:auto;margin-bottom:12px;display:block}
+.foot-brand p{font-size:13px;color:var(--ink-3);max-width:30ch;line-height:1.6}
+.foot-btm{border-top:1px solid var(--line-2);padding:16px 0 26px;display:flex;flex-wrap:wrap;gap:10px 20px;
+  align-items:center;justify-content:space-between;font-size:12.5px;color:var(--ink-3)}
+.legal{max-width:1100px;margin:0 auto;padding:0 18px}
+@media (min-width:980px){
+  .legal{padding:0 34px}
+  .legal-grid{display:grid;grid-template-columns:230px 1fr;gap:52px;align-items:start}
+  .toc{position:sticky;top:26px}
+}
+.legal-hd{padding:34px 0 24px}
+.legal-hd h1{font-family:var(--serif);font-weight:600;font-size:clamp(30px,5vw,42px);line-height:1.08}
+.legal-hd .meta{margin-top:10px;font-size:13.5px;color:var(--ink-3)}
+.toc ul{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.toc button{font-size:13px;color:var(--ink-2);padding:6px 10px;border-radius:8px;width:100%;text-align:left;line-height:1.35}
+.toc button:hover{background:var(--line-2);color:var(--ink)}
+.prose{max-width:70ch;font-size:15.5px;line-height:1.72;color:var(--ink-2);padding-bottom:40px}
+.prose h2{font-family:var(--serif);font-weight:600;font-size:22px;color:var(--ink);
+  margin:34px 0 10px;scroll-margin-top:20px}
+.prose h3{font-size:15.5px;font-weight:700;color:var(--ink);margin:20px 0 6px;font-family:var(--body);letter-spacing:0}
+.prose p{margin:0 0 14px}
+.prose ul{margin:0 0 14px;padding-left:20px;display:grid;gap:7px}
+.prose li::marker{color:var(--flame)}
+.prose strong{color:var(--ink)}
+.prose table{width:100%;border-collapse:collapse;margin:0 0 16px;font-size:14px}
+.prose th,.prose td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+.prose th{color:var(--ink);font-weight:600;font-size:12.5px;letter-spacing:.02em}
+.prose a{color:var(--flame)}
+
+/* ================= 15. MISC ================= */
+.empty{text-align:center;padding:56px 20px}
+.empty .frieze{max-width:180px;margin:0 auto 22px}
+.empty h3{font-size:19px;font-weight:600;margin-bottom:6px}
+.empty p{color:var(--ink-2);font-size:14.5px;margin:0 0 18px}
+.screen{display:none}
+.screen.on{display:block}
+.sec{padding:24px 0}
+.count{font-size:13.5px;color:var(--ink-2)}
+.band{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<!-- ============ SPRITE ============ -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7.5"/><path d="M16.5 16.5L21 21"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12.5h5"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M5.5 20c0-3.4 2.9-6 6.5-6s6.5 2.6 6.5 6"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3.5 6h17M6.5 12h11M10 18h4"/></symbol>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4.5L3.5 6.8v12.7L9 17.2l6 2.3 5.5-2.3V4.5L15 6.8z"/><path d="M9 4.5v12.7M15 6.8v12.7"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-fwd" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6 3h3l1.6 4-2 1.4a12 12 0 0 0 5.9 5.9l1.4-2 4 1.6v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4 5.2 2 2 0 0 1 6 3z"/></symbol>
+  <symbol id="i-nav" viewBox="0 0 24 24"><path d="M21 3L3 10.5l7.8 2.7L13.5 21z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 1-4.2-7.3"/><path d="M4.2 19.8L5.5 16A8.5 8.5 0 0 0 20.5 12"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3.5M8.5 7L12 3.5 15.5 7"/><path d="M5 13v6.5h14V13"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M3 8.5h4L8.5 6h7L17 8.5h4v11H3z"/><circle cx="12" cy="13.5" r="3.4"/></symbol>
+  <symbol id="i-shop" viewBox="0 0 24 24"><path d="M4 9.5h16V20H4z"/><path d="M3 9.5L4.6 4h14.8L21 9.5"/><path d="M10 20v-5.5h4V20"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 16v-4M12.5 16V8M17 16v-6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M13 3H6v18h12V8z"/><path d="M13 3v5h5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.4-3 7.8-7 9-4-1.2-7-4.6-7-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></symbol>
+  <symbol id="i-reply" viewBox="0 0 24 24"><path d="M9 7L4 12l5 5"/><path d="M4 12h9a6 6 0 0 1 6 6v1"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+
+  <!-- scenes: layered illustration stand-ins for photography -->
+  <symbol id="sc-cup" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice">
+    <circle class="s-sun" cx="126" cy="26" r="20"/><path class="s-md" d="M0 84h160v36H0z"/>
+    <path class="s-dk" d="M46 56h50v22a20 20 0 0 1-20 20H66a20 20 0 0 1-20-20z"/>
+    <path class="s-dk" d="M96 60h9a10 10 0 0 1 0 20h-9z"/><path class="s-lt" d="M40 96h68v6H40z"/>
+    <path class="s-lt" d="M58 44c0 5-5 5-5 10M74 40c0 6-6 6-6 12M90 46c0 4-4 4-4 8" fill="none" stroke="#FFF6EA" stroke-width="3.4" opacity=".38" stroke-linecap="round"/>
+    <path class="s-md" d="M112 74h34v22h-34z"/></symbol>
+  <symbol id="sc-fire" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice">
+    <path class="s-md" d="M0 88h160v32H0z"/><circle class="s-sun" cx="30" cy="28" r="17"/>
+    <path class="s-dk" d="M80 22c5 22 24 26 24 46a24 24 0 0 1-48 0c0-11 7-15 9-24 6 7 8 11 8 18 7-9 9-25 7-40z"/>
+    <rect class="s-dk" x="34" y="84" width="92" height="8" rx="4"/>
+    <path class="s-lt" d="M40 92l6 26M120 92l-6 26M56 96h48" fill="none" stroke="#FFF6EA" stroke-width="3" opacity=".3"/>
+    <path class="s-lt" d="M52 84h56v4H52z"/></symbol>
+  <symbol id="sc-plate" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice">
+    <path class="s-md" d="M0 78h160v42H0z"/><circle class="s-lt" cx="80" cy="62" r="40"/>
+    <circle class="s-dk" cx="80" cy="62" r="26"/><circle class="s-lt" cx="72" cy="55" r="9"/>
+    <path class="s-dk" d="M14 44h10v46H14zM136 44h10v46h-10z"/>
+    <circle class="s-sun" cx="126" cy="22" r="15"/></symbol>
+  <symbol id="sc-glass" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice">
+    <path class="s-dk" d="M0 92h160v28H0z"/><circle class="s-sun" cx="34" cy="30" r="19"/>
+    <path class="s-dk" d="M52 24h56l-24 38v26h14v8H62v-8h14V62z"/>
+    <path class="s-lt" d="M60 32h40l-8 12H68z"/>
+    <path class="s-md" d="M118 56h30v36h-30z"/></symbol>
+  <symbol id="sc-bread" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice">
+    <path class="s-md" d="M0 86h160v34H0z"/><circle class="s-sun" cx="128" cy="28" r="18"/>
+    <path class="s-dk" d="M34 60a20 20 0 0 1 20-20h44a20 20 0 0 1 0 40v18H34z"/>
+    <path d="M56 48c0 9 0 13-5 20M74 46c0 10 0 14-5 21M92 48c0 9 0 13-5 20" fill="none" stroke="#FFF6EA" stroke-width="3.4" opacity=".34" stroke-linecap="round"/>
+    <path class="s-lt" d="M28 96h104v6H28z"/></symbol>
+  <symbol id="sc-shop" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice">
+    <circle class="s-sun" cx="132" cy="20" r="16"/><path class="s-dk" d="M22 44h116v76H22z"/>
+    <path class="s-md" d="M14 44l10-20h112l10 20z"/>
+    <path class="s-lt" d="M14 44h20l-2 12H16zM54 44h20l-2 12H52zM94 44h20l-2 12H92zM134 44h12l-2 12h-12z"/>
+    <rect class="s-lt" x="62" y="76" width="36" height="44" rx="2"/>
+    <rect class="s-md" x="32" y="66" width="20" height="18"/><rect class="s-md" x="108" y="66" width="20" height="18"/></symbol>
+  <symbol id="sc-cut" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice">
+    <path class="s-md" d="M0 90h160v30H0z"/><circle class="s-sun" cx="36" cy="26" r="16"/>
+    <circle cx="62" cy="86" r="12" fill="none" class="s-dk" stroke="#1A0F07" stroke-width="7" opacity=".34"/>
+    <circle cx="106" cy="86" r="12" fill="none" class="s-dk" stroke="#1A0F07" stroke-width="7" opacity=".34"/>
+    <path d="M68 76l40-46M100 76L60 30" fill="none" stroke="#1A0F07" stroke-width="7" opacity=".34" stroke-linecap="round"/></symbol>
+  <symbol id="sc-tool" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice">
+    <path class="s-md" d="M0 84h160v36H0z"/><circle class="s-sun" cx="130" cy="26" r="17"/>
+    <path class="s-dk" d="M104 20a19 19 0 0 0-17 27L52 82a9 9 0 0 0 13 13l35-35a19 19 0 0 0 25-24l-14 14-11-11z"/>
+    <rect class="s-lt" x="24" y="92" width="46" height="6" rx="3"/></symbol>
+  <symbol id="sc-hills" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice">
+    <circle class="s-sun" cx="118" cy="30" r="21"/>
+    <path class="s-md" d="M0 78c26-26 44-8 62-22s38 8 56-6 42 0 42 0v70H0z"/>
+    <path class="s-dk" d="M0 96c30-22 48 2 70-10s44 12 90-6v40H0z"/>
+    <path class="s-lt" d="M0 112h160v8H0z"/></symbol>
+  <symbol id="sc-city" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice">
+    <circle class="s-sun" cx="34" cy="26" r="18"/>
+    <path class="s-md" d="M8 60h22v60H8zM40 44h20v76H40zM70 70h24v50H70zM104 52h20v68h-20zM134 76h20v44h-20z"/>
+    <path class="s-dk" d="M0 108h160v12H0z"/>
+    <path class="s-lt" d="M14 68h10v8H14zM46 52h8v8h-8zM110 60h8v8h-8zM76 78h10v8H76z"/></symbol>
+
+  <!-- brand marks, straight from the logo kit -->
+  <symbol id="zelp-mark" viewBox="0 0 100 116">
+    <path class="pin-bg" fill="var(--flame)" d="M26,0 H74 A26,26 0 0 1 100,26 V66 A26,26 0 0 1 74,92 H62 L50,116 L38,92 H26 A26,26 0 0 1 0,66 V26 A26,26 0 0 1 26,0 Z"/>
+    <g transform="translate(32.5,23) scale(0.46)"><path fill="#F7F1E7" d="M0,0 H76 V22 L26,78 H76 V100 H0 V78 L50,22 H0 Z"/></g></symbol>
+  <symbol id="zelp-lockup" viewBox="0 0 399 116">
+    <path fill="var(--flame)" d="M26,0 H74 A26,26 0 0 1 100,26 V66 A26,26 0 0 1 74,92 H62 L50,116 L38,92 H26 A26,26 0 0 1 0,66 V26 A26,26 0 0 1 26,0 Z"/>
+    <g transform="translate(32.5,23) scale(0.46)"><path fill="#F7F1E7" d="M0,0 H76 V22 L26,78 H76 V100 H0 V78 L50,22 H0 Z"/></g>
+    <g transform="translate(132,5) scale(0.82)" fill="var(--ink)">
+      <path d="M0,0 H76 V22 L26,78 H76 V100 H0 V78 L50,22 H0 Z"/>
+      <path d="M96,0 H158 V22 H118 V39 H152 V61 H118 V78 H158 V100 H96 Z"/>
+      <path d="M178,0 H200 V78 H236 V100 H178 Z"/>
+      <path fill-rule="evenodd" d="M256,0 H292 A33,33 0 0 1 292,66 H278 V100 H256 Z M278,46 H292 A13,13 0 0 0 292,20 H278 Z"/></g></symbol>
+  <symbol id="zelp-lockup-light" viewBox="0 0 399 116">
+    <path fill="#F7F1E7" fill-rule="evenodd" d="M26,0 H74 A26,26 0 0 1 100,26 V66 A26,26 0 0 1 74,92 H62 L50,116 L38,92 H26 A26,26 0 0 1 0,66 V26 A26,26 0 0 1 26,0 Z M32.5,23 h34.96 v10.12 l-23,25.76 h23 v10.12 h-34.96 v-10.12 l23,-25.76 h-23 Z"/>
+    <g transform="translate(132,5) scale(0.82)" fill="#F7F1E7">
+      <path d="M0,0 H76 V22 L26,78 H76 V100 H0 V78 L50,22 H0 Z"/>
+      <path d="M96,0 H158 V22 H118 V39 H152 V61 H118 V78 H158 V100 H96 Z"/>
+      <path d="M178,0 H200 V78 H236 V100 H178 Z"/>
+      <path fill-rule="evenodd" d="M256,0 H292 A33,33 0 0 1 292,66 H278 V100 H256 Z M278,46 H292 A13,13 0 0 0 292,20 H278 Z"/></g></symbol>
+</svg>
+
+<!-- ============ SPLASH ============ -->
+<div class="splash" id="splash">
+  <div class="flagline tall"></div>
+  <div class="splash-art">
+    <svg viewBox="0 0 160 120" style="top:-6%;left:-14%"><use href="#sc-hills"/></svg>
+    <svg viewBox="0 0 160 120" style="bottom:-8%;right:-18%"><use href="#sc-city"/></svg>
+  </div>
+  <div class="splash-body">
+    <svg class="splash-logo" viewBox="0 0 399 116"><use href="#zelp-lockup-light"/></svg>
+    <p class="splash-tag">Find what's good near you</p>
+    <p class="splash-cities">Harare · Bulawayo · Mutare · Gweru · Vic Falls</p>
+  </div>
+  <div class="splash-foot">
+    <div class="loadbar"><i></i></div>
+    Made in Harare
+  </div>
+</div>
+
+<div class="shell">
+  <!-- ============ SIDEBAR ============ -->
+  <nav class="side" id="side"></nav>
+
+  <main class="main">
+    <section class="screen on" id="s-explore"></section>
+    <section class="screen" id="s-search"></section>
+    <section class="screen" id="s-detail"></section>
+    <section class="screen" id="s-saved"></section>
+    <section class="screen" id="s-reviews"></section>
+    <section class="screen" id="s-you"></section>
+    <section class="screen" id="s-bizhome"></section>
+    <section class="screen" id="s-bizdash"></section>
+    <section class="screen" id="s-bizreviews"></section>
+    <section class="screen" id="s-bizprofile"></section>
+    <section class="screen" id="s-terms"></section>
+    <section class="screen" id="s-privacy"></section>
+  </main>
+</div>
+
+<nav class="tabs" id="tabs"></nav>
+
+<div class="scrim" id="scrim"></div>
+
+<div class="sheet" id="sheet-filters">
+  <div class="sheet-grip"><i></i></div>
+  <h2>Filters</h2>
+  <p class="lede">Narrow it to what's actually useful today.</p>
+  <div class="field"><label>Good to know</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="badgeFilters"></div></div>
+  <div class="field"><label>Price</label>
+    <div style="display:flex;gap:8px" id="priceFilters"></div></div>
+  <div style="display:flex;gap:10px;padding-top:4px">
+    <button class="btn btn-quiet" style="flex:1" data-clearfilters>Clear all</button>
+    <button class="btn btn-primary" style="flex:2" data-close>Show results</button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet-review">
+  <div class="sheet-grip"><i></i></div>
+  <h2>Write a review</h2>
+  <p class="lede" id="revFor"></p>
+  <div class="field"><label id="starLabel">How was it?</label><div class="starpick" id="starPick"></div></div>
+  <div class="field" id="tagField" hidden><label>Anything stand out?</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="quickTags"></div></div>
+  <div class="field"><label for="revText">What should someone know before they go?</label>
+    <textarea class="ta" id="revText" placeholder="Be specific — the thing you wish you'd known."></textarea></div>
+  <div class="field"><button class="btn btn-quiet" style="width:100%;border-style:dashed">
+    <svg class="i"><use href="#i-cam"/></svg>Add photos</button></div>
+  <button class="btn btn-primary btn-block" id="postReview" disabled>Post review</button>
+</div>
+
+<div class="sheet" id="sheet-reply">
+  <div class="sheet-grip"><i></i></div>
+  <h2>Reply as the owner</h2>
+  <p class="lede" id="replyTo"></p>
+  <div class="field"><textarea class="ta" id="replyText"
+    placeholder="Thank them, answer the specific thing, and say what you've changed."></textarea></div>
+  <div class="notice" style="margin-bottom:16px"><svg class="i" style="width:17px;height:17px;margin-top:2px"><use href="#i-shield"/></svg>
+    <span>Replies are public and permanent. Don't post a customer's personal details.</span></div>
+  <button class="btn btn-primary btn-block" id="postReply">Post reply</button>
+</div>
+
+<div class="sheet" id="sheet-claim">
+  <div class="sheet-grip"><i></i></div>
+  <h2>Claim your listing</h2>
+  <p class="lede">Two minutes now, then you can reply to reviews and fix your hours.</p>
+  <div class="field"><label for="cName">Business name</label><input class="inp" id="cName" placeholder="e.g. Sable Coffee Roasters"></div>
+  <div class="field"><label for="cPhone">Phone number</label><input class="inp" id="cPhone" placeholder="+263 …" inputmode="tel"></div>
+  <div class="field"><label for="cRole">Your role</label><input class="inp" id="cRole" placeholder="Owner, manager…"></div>
+  <div class="notice" style="margin-bottom:16px"><svg class="i" style="width:17px;height:17px;margin-top:2px"><use href="#i-clock"/></svg>
+    <span>We verify by calling the number on the listing. Most claims clear within a working day.</span></div>
+  <button class="btn btn-primary btn-block" id="submitClaim">Submit claim</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================== DATA ==================== */
+const PAL = [["#F1CBA6","#C4703F"],["#DCCFB6","#8B7A5C"],["#F3C9B1","#C1533A"],["#CBD9C6","#5C7A5E"],
+  ["#EDD5AA","#BB8F3E"],["#D7C5CC","#87606F"],["#F2DAB6","#B87A3C"],["#C7D4DB","#5E7A88"]];
+const OWNER = "Sable Coffee Roasters";
+const PLACES = [
+ {id:1,name:"Amai's Kitchen",cat:"Traditional",hood:"Mbare",price:"$",rating:4.7,reviews:436,open:true,
+  closes:"20:00",scene:"sc-plate",pal:0,pin:[26,44],photos:38,
+  badges:["USD cash","EcoCash","Outdoor"],
+  blurb:"Sadza and road-runner chicken, cooked the way your aunt does it. Queue moves fast.",
+  revs:[{n:"Tafadzwa M.",s:5,d:"3 days ago",t:"The road-runner takes twenty minutes and it is worth every one of them. Ask for extra muriwo, they don't mind.",tags:["Great value"],ph:2},
+        {n:"Chipo N.",s:4,d:"2 weeks ago",t:"Portions are enormous and the price hasn't moved in a year. Seating is tight at lunch, so go before noon or after two.",tags:[]}]},
+ {id:2,name:"Sable Coffee Roasters",cat:"Café",hood:"Avondale",price:"$$",rating:4.8,reviews:312,open:true,
+  closes:"17:30",scene:"sc-cup",pal:1,pin:[52,30],photos:64,
+  badges:["Generator","Wi-Fi","Card","Parking","Wheelchair"],
+  blurb:"They roast on site on Tuesdays, so the whole block smells like it.",
+  revs:[{n:"Tendai K.",s:5,d:"5 days ago",t:"Best flat white in Harare and the only café I trust to still be open when ZESA goes. Generator kicks in within a minute.",tags:["Friendly staff"],ph:3,
+         reply:{t:"Thank you Tendai. The generator was a big spend and it's good to hear it matters. Tuesday roast days are 07:00 if you want beans warm.",d:"4 days ago"}},
+        {n:"Rutendo S.",s:5,d:"3 weeks ago",t:"Good wifi, plenty of plugs, nobody rushes you. I have written most of a dissertation at the corner table.",tags:["Quiet"]},
+        {n:"Nyasha D.",s:3,d:"1 month ago",t:"Coffee is excellent but the card machine was down and I only had ecocash. Took twenty minutes to sort out.",tags:["Card machine down"]}]},
+ {id:3,name:"Msasa Braai Yard",cat:"Braai",hood:"Msasa",price:"$$",rating:4.5,reviews:688,open:true,
+  closes:"23:00",scene:"sc-fire",pal:2,pin:[70,58],photos:91,
+  badges:["Generator","USD cash","Outdoor","Parking"],
+  blurb:"Open fire, long shared tables, and a queue that moves faster than it looks.",
+  revs:[{n:"Farai M.",s:5,d:"1 week ago",t:"Come hungry. The mixed grill feeds two easily and the boerewors is made in house.",tags:["Good for groups"],ph:4},
+        {n:"Nyasha D.",s:4,d:"1 month ago",t:"Gets loud after eight on a Friday. Lovely if that's what you came for, less lovely if you came to talk.",tags:["Loud music"]}]},
+ {id:4,name:"The Copper Pot",cat:"Restaurant",hood:"Borrowdale",price:"$$$",rating:4.4,reviews:521,open:false,
+  closes:"opens 12:00",scene:"sc-plate",pal:5,pin:[44,18],photos:47,
+  badges:["Generator","Card","Wheelchair","Parking"],
+  blurb:"White tablecloths without the attitude. Book ahead for Sunday lunch.",
+  revs:[{n:"Blessing C.",s:4,d:"2 weeks ago",t:"Sunday lunch is the thing to come for. Book two days ahead or you're eating at the bar.",tags:[]}]},
+ {id:5,name:"Kopje Bar & Grill",cat:"Bar",hood:"CBD",price:"$$",rating:4.3,reviews:612,open:true,
+  closes:"23:30",scene:"sc-glass",pal:7,pin:[36,72],photos:73,
+  badges:["USD cash","Card","Outdoor"],
+  blurb:"Rooftop, cold beer, and the best view of the kopje at sunset.",
+  revs:[{n:"Kudzai T.",s:4,d:"4 days ago",t:"Go for the sunset, stay for the wings. The lift is temperamental but the stairs are only three floors.",tags:["Worth the wait"],ph:2}]},
+ {id:6,name:"Belgravia Bakehouse",cat:"Bakery",hood:"Belgravia",price:"$",rating:4.6,reviews:268,open:true,
+  closes:"16:00",scene:"sc-bread",pal:4,pin:[58,42],photos:29,
+  badges:["EcoCash","Card","Wi-Fi"],
+  blurb:"Sourdough out of the oven at seven. It's gone by ten.",
+  revs:[{n:"Rutendo S.",s:5,d:"6 days ago",t:"Get there before nine if you want a loaf. The cinnamon buns are the other reason to set an alarm.",tags:["Great value"]}]},
+ {id:7,name:"Highfield Hot Plate",cat:"Traditional",hood:"Highfield",price:"$",rating:4.5,reviews:203,open:true,
+  closes:"19:00",scene:"sc-plate",pal:6,pin:[24,64],photos:18,
+  badges:["USD cash","EcoCash","Delivery"],
+  blurb:"A tuckshop counter that quietly turned into a proper kitchen.",
+  revs:[{n:"Farai M.",s:5,d:"2 weeks ago",t:"Two dollars for a plate that keeps you going until evening. No frills, no complaints.",tags:["Great value"]}]},
+ {id:8,name:"Milton Park Salon",cat:"Salon",hood:"Milton Park",price:"$$",rating:4.9,reviews:154,open:true,
+  closes:"18:00",scene:"sc-cut",pal:3,pin:[64,26],photos:52,
+  badges:["Generator","Card","EcoCash","Wheelchair"],
+  blurb:"Book with Vim. Everyone books with Vim.",
+  revs:[{n:"Chipo N.",s:5,d:"1 week ago",t:"They keep to appointment times, which I did not know was possible. Braids lasted eight weeks.",tags:["Fast service"]}]},
+ {id:9,name:"Newlands Hardware",cat:"Hardware",hood:"Newlands",price:"$",rating:4.1,reviews:88,open:false,
+  closes:"opens 08:00",scene:"sc-tool",pal:1,pin:[48,52],photos:12,
+  badges:["USD cash","Card","Parking","Borehole"],
+  blurb:"Has the thing nobody else has. Ask at the back counter.",
+  revs:[{n:"Blessing C.",s:4,d:"3 weeks ago",t:"Found a tap washer here after four other shops shrugged at me. Staff know their stock.",tags:[]}]},
+ {id:10,name:"Borrowdale Brunch Co.",cat:"Café",hood:"Borrowdale",price:"$$",rating:4.6,reviews:389,open:true,
+  closes:"15:00",scene:"sc-cup",pal:2,pin:[74,34],photos:58,
+  badges:["Generator","Card","Outdoor","Wheelchair"],
+  blurb:"Weekend queues for a reason. The eggs are the reason.",
+  revs:[{n:"Nyasha D.",s:5,d:"1 week ago",t:"Worth the wait on a Saturday. Put your name down and walk the shops for twenty minutes.",tags:["Worth the wait"],ph:3}]}
+];
+const COLLECTIONS = [
+ {t:"Sunday lunch, sorted",s:"11 places that do it properly",scene:"sc-plate",pal:0},
+ {t:"When ZESA goes",s:"Generators, and they actually work",scene:"sc-fire",pal:2},
+ {t:"Take your visitors here",s:"The Harare you'd want them to see",scene:"sc-hills",pal:3},
+ {t:"Under five dollars",s:"Proper plates, small money",scene:"sc-shop",pal:6}
+];
+const CATS = ["All","Traditional","Café","Braai","Restaurant","Bar","Bakery","Salon","Hardware"];
+const BADGES = ["Generator","Borehole","USD cash","EcoCash","Card","Wi-Fi","Parking","Outdoor","Wheelchair","Delivery"];
+const QUICK = {hi:["Great value","Fast service","Good for groups","Worth the wait","Friendly staff","Quiet"],
+               lo:["Slow service","Loud music","Card machine down","Long wait","Hard to park"]};
+const HOURS = [["Monday","07:00","17:30"],["Tuesday","07:00","17:30"],["Wednesday","07:00","17:30"],
+  ["Thursday","07:00","17:30"],["Friday","07:00","18:30"],["Saturday","08:00","15:00"],["Sunday","Closed",""]];
+const WEEK = [{d:"Mon",v:148},{d:"Tue",v:196},{d:"Wed",v:172},{d:"Thu",v:210},{d:"Fri",v:264},{d:"Sat",v:302},{d:"Sun",v:118}];
+
+/* ==================== STATE ==================== */
+const S = {screen:"explore",prev:"explore",mode:"consumer",cat:"All",q:"",filters:new Set(),price:null,
+  saved:new Set([2,3]),mine:[],detailId:null,stars:0,tags:new Set(),hot:null,slow:false,
+  reviewId:null,replyIdx:null,loaded:{}};
+
+/* ==================== HELPERS ==================== */
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ic = (id,cls="i") => `<svg class="${cls}"><use href="#${id}"/></svg>`;
+const palv = p => `--a:${PAL[p][0]};--b:${PAL[p][1]}`;
+const pic = (scene,pal,cls="",style="") =>
+  `<div class="ph ${cls}" style="${palv(pal)};${style}"><svg class="scene" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice"><use href="#${scene}"/></svg></div>`;
+const stars = n => `<span class="stars">${[1,2,3,4,5].map(i=>`<svg class="i ${i<=n?"":"off"}"><use href="#i-star"/></svg>`).join("")}</span>`;
+const statusOf = p => p.open
+  ? `<span class="status open"><span class="dot"></span>Open · closes ${p.closes}</span>`
+  : `<span class="status shut"><span class="dot"></span>Closed · ${p.closes}</span>`;
+const AVC = [["#D9502B","#F2B133"],["#2E6A52","#15201B"],["#F2B133","#D9502B"],["#15201B","#2E6A52"]];
+const av = n => `<div class="av" style="background:linear-gradient(140deg,${AVC[n.charCodeAt(0)%4].join(",")})">${esc(n[0])}</div>`;
+const P = id => PLACES.find(x=>x.id===id);
+
+function toast(msg,bad,action){
+  const t=$("#toast");
+  t.className = "toast on" + (bad?" bad":"");
+  t.innerHTML = `${ic(bad?"i-shield":"i-check")}<span>${esc(msg)}</span>` +
+    (action?`<button data-toast-action>${esc(action)}</button>`:"");
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("on"),action?4200:2100);
+}
+/* simulated network — the thing optimistic UI is optimistic about */
+function net(ms=520,fail=0.10){
+  const d = S.slow ? ms*3 : ms, f = S.slow ? 0.45 : fail;
+  return new Promise((ok,no)=>setTimeout(()=>Math.random()<f?no(new Error("network")):ok(),d));
+}
+function loadThen(sel,skeleton,render,ms=650){
+  const el=$(sel); if(!el) return;
+  el.innerHTML=skeleton;
+  setTimeout(()=>{ if($(sel)) $(sel).innerHTML=render(); },S.slow?ms*2.2:ms);
+}
+
+/* ==================== SKELETONS ==================== */
+const skCard = () => `<div class="card"><div class="sk sk-ph"></div>
+  <div class="sk-stack"><div class="sk sk-l" style="width:72%"></div>
+  <div class="sk sk-l" style="width:52%;height:10px"></div>
+  <div class="sk sk-l" style="width:40%;height:10px"></div></div></div>`;
+const skCards = n => `<div class="grid-cards">${Array(n).fill(skCard()).join("")}</div>`;
+const skRow = () => `<div class="row-card" style="border-bottom:1px solid var(--line)">
+  <div class="sk" style="aspect-ratio:1;border-radius:12px"></div>
+  <div class="sk-stack" style="justify-content:center">
+  <div class="sk sk-l" style="width:64%"></div><div class="sk sk-l" style="width:44%;height:10px"></div>
+  <div class="sk sk-l" style="width:30%;height:10px"></div></div></div>`;
+const skRows = n => Array(n).fill(skRow()).join("");
+const skStat = () => `<div class="stat"><div class="sk sk-l" style="width:52%;height:10px"></div>
+  <div class="sk sk-l" style="width:66%;height:24px;margin:10px 0 8px"></div>
+  <div class="sk" style="height:26px;border-radius:6px"></div></div>`;
+
+/* ==================== CHROME ==================== */
+const CONSUMER_NAV=[["explore","i-compass","Explore"],["search","i-search","Search"],
+  ["saved","i-heart","Saved"],["reviews","i-note","My reviews"],["you","i-user","You"]];
+const BIZ_NAV=[["bizdash","i-chart","Dashboard"],["bizreviews","i-note","Reviews"],
+  ["bizprofile","i-shop","Listing"],["explore","i-compass","View public site"]];
+
+function renderChrome(){
+  const nav = S.mode==="consumer"?CONSUMER_NAV:BIZ_NAV;
+  $("#side").innerHTML = `
+    <div class="logo"><svg viewBox="0 0 399 116"><use href="#zelp-lockup"/></svg></div>
+    ${S.mode==="business"?`<div class="nav-sep">Business</div>`:""}
+    ${nav.map(([k,i,l])=>`<button class="nav-item ${S.screen===k?"on":""}" data-go="${k}">${ic(i)}${l}</button>`).join("")}
+    <div class="side-foot">
+      <button class="nav-item" data-theme-toggle>${ic("i-sun")}Appearance</button>
+      <div class="mode-card">
+        ${S.mode==="consumer"
+          ? `<b>Own a place?</b><span>Reply to reviews, fix your hours, see who's looking.</span>
+             <button class="btn btn-primary btn-sm btn-block" data-go="bizhome">For businesses</button>`
+          : `<b>${esc(OWNER)}</b><span>Verified · Avondale, Harare</span>
+             <button class="btn btn-quiet btn-sm btn-block" data-mode="consumer">Back to Zelp</button>`}
+      </div>
+    </div>`;
+  $("#tabs").style.gridTemplateColumns=`repeat(${Math.min(nav.length,5)},1fr)`;
+  $("#tabs").innerHTML = nav.slice(0,5).map(([k,i,l])=>
+    `<button class="tab ${S.screen===k?"on":""}" data-go="${k}">${ic(i)}${l.replace("View public site","Public")}</button>`).join("");
+}
+
+function footer(){
+  const col=(h,items)=>`<div><h4>${h}</h4><ul>${items.map(([l,go])=>
+    `<li>${go?`<button data-go="${go}">${l}</button>`:`<a href="#" onclick="return false">${l}</a>`}</li>`).join("")}</ul></div>`;
+  return `<footer class="foot"><div class="flagline"></div><div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <svg viewBox="0 0 399 116"><use href="#zelp-lockup"/></svg>
+        <p>Reviews of Zimbabwean places, written by the people who actually go there.</p>
+      </div>
+      ${col("Discover",[["Collections"],["Categories"],["Harare"],["Bulawayo"],["Vic Falls"]])}
+      ${col("For businesses",[["Claim your listing","bizhome"],["Business dashboard","bizdash"],["Advertise"],["Support"]])}
+      ${col("Company",[["About"],["Careers"],["Press"],["Contact"]])}
+      ${col("Legal",[["Terms of service","terms"],["Privacy policy","privacy"],["Community guidelines"],["Content policy"]])}
+    </div>
+    <div class="foot-btm">
+      <span>© 2026 Zelp (Private) Limited · Harare, Zimbabwe</span>
+      <span>Made in Harare · Prices in USD</span>
+    </div>
+  </div></footer>`;
+}
+
+/* ==================== CARDS ==================== */
+function cardHTML(p){
+  const sv=S.saved.has(p.id);
+  return `<div class="card">
+    <button class="ph" style="${palv(p.pal)};aspect-ratio:4/3" data-open="${p.id}" aria-label="${esc(p.name)}">
+      <svg class="scene" viewBox="0 0 160 120" preserveAspectRatio="xMidYMid slice"><use href="#${p.scene}"/></svg>
+      <span class="pill-ph num">${p.photos} photos</span></button>
+    <button class="save ${sv?"on":""}" data-save="${p.id}" aria-pressed="${sv}" aria-label="Save ${esc(p.name)}">${ic("i-heart")}</button>
+    <button data-open="${p.id}" style="text-align:left;display:block;width:100%">
+      <span class="card-title"><span class="card-name">${esc(p.name)}</span>
+        <span class="rate">${ic("i-star")}<span class="num">${p.rating.toFixed(1)}</span></span></span>
+      <span class="card-sub num">${esc(p.cat)} · ${esc(p.hood)} · ${p.price}</span>
+      <span style="display:block;margin-top:5px">${statusOf(p)}</span></button></div>`;
+}
+function rowHTML(p){
+  return `<button class="row-card" data-open="${p.id}" data-hover="${p.id}">
+    ${pic(p.scene,p.pal)}
+    <div class="row-body">
+      <div class="card-title"><span class="card-name">${esc(p.name)}</span>
+        <span class="rate">${ic("i-star")}<span class="num">${p.rating.toFixed(1)}</span></span></div>
+      <div class="card-sub num">${esc(p.cat)} · ${esc(p.hood)} · ${p.price} · ${p.reviews} reviews</div>
+      <div>${statusOf(p)}</div>
+      <div class="badges">${p.badges.slice(0,3).map(b=>`<span class="badge">${esc(b)}</span>`).join("")}</div>
+    </div></button>`;
+}
+function matches(p){
+  if(S.cat!=="All"&&p.cat!==S.cat) return false;
+  if(S.price&&p.price!==S.price) return false;
+  for(const f of S.filters){ if(f==="Open now") continue; if(!p.badges.includes(f)) return false; }
+  if(S.q&&!(p.name+" "+p.cat+" "+p.hood).toLowerCase().includes(S.q.toLowerCase())) return false;
+  return true;
+}
+
+/* ==================== EXPLORE ==================== */
+function renderExplore(){
+  $("#s-explore").innerHTML = `
+    <div class="topbar"><div class="wrap">
+      <div class="topbar-row">
+        <div class="mob-logo"><svg viewBox="0 0 399 116"><use href="#zelp-lockup"/></svg></div>
+        <div style="flex:1"></div>
+        <button class="iconbtn" data-go="search" aria-label="Search">${ic("i-search")}</button>
+        <button class="iconbtn" data-theme-toggle aria-label="Appearance">${ic("i-sun")}</button>
+      </div>
+      <div class="rail" id="catRail" style="padding:14px 0 12px"></div>
+    </div><div class="flagline"></div></div>
+
+    <div class="sec" style="padding-bottom:8px">
+      <div class="wrap" style="margin-bottom:14px">
+        <p class="eyebrow" style="margin-bottom:6px">Collections</p>
+        <h2 class="h-ed" style="font-size:26px">Worth leaving the house for</h2>
+      </div>
+      <div class="hero-rail">${COLLECTIONS.map(c=>`
+        <button class="hero-card">${pic(c.scene,c.pal)}
+          <span class="overlay-txt"><h3>${esc(c.t)}</h3><p>${esc(c.s)}</p></span></button>`).join("")}
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="sec">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+          <h2 class="h-sec" style="margin:0">Open now near you</h2>
+          <span class="count num" id="openCount"></span></div>
+        <div id="feedOpen"></div>
+      </div>
+    </div>
+
+    <div class="band"><div class="wrap"><div class="sec">
+      <p class="eyebrow" style="margin-bottom:6px">Avondale · Belgravia · Milton Park</p>
+      <h2 class="h-ed" style="font-size:24px;margin-bottom:14px">Top rated on your side of town</h2>
+      <div id="feedTop"></div>
+    </div></div></div>
+
+    <div class="wrap"><div class="sec">
+      <div class="card-surface" style="padding:24px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+        <div style="flex:1;min-width:220px">
+          <h3 class="h-ed" style="font-size:21px;margin-bottom:6px">Own one of these places?</h3>
+          <p style="color:var(--ink-2);font-size:14.5px">Claim it free. Reply to reviews, keep your hours honest, and see how many people called you this week.</p>
+        </div>
+        <button class="btn btn-primary" data-go="bizhome">${ic("i-shop")}Claim your listing</button>
+      </div>
+    </div></div>
+    ${footer()}`;
+  $("#catRail").innerHTML = CATS.map(c=>`<button class="chip ${S.cat===c?"on":""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+  paintFeeds();
+}
+function paintFeeds(){
+  const list=PLACES.filter(matches), open=list.filter(p=>p.open);
+  const top=[...list].sort((a,b)=>b.rating-a.rating).slice(0,4);
+  loadThen("#feedOpen",skCards(4),()=>{
+    $("#openCount").textContent = `${open.length} open`;
+    return open.length?`<div class="grid-cards">${open.slice(0,4).map(cardHTML).join("")}</div>`
+      :`<div class="empty"><div class="frieze"></div><h3>Nothing open in ${esc(S.cat)}</h3>
+        <p>Try another category, or come back in the morning.</p></div>`;
+  });
+  loadThen("#feedTop",skCards(4),()=>`<div class="grid-cards">${top.map(cardHTML).join("")}</div>`,820);
+}
+
+/* ==================== SEARCH ==================== */
+function renderSearch(){
+  $("#s-search").innerHTML = `
+    <div class="topbar topbar-btm"><div class="wrap">
+      <div class="topbar-row">
+        <button class="iconbtn" data-go="explore" aria-label="Back">${ic("i-back")}</button>
+        <div class="search">${ic("i-search","i")}
+          <input id="q" type="search" placeholder="Search places in Harare" aria-label="Search places" value="${esc(S.q)}">
+          <div class="divider"></div>
+          <button class="iconbtn" style="width:34px;height:34px;border:0" data-filter-open aria-label="Filters">${ic("i-filter")}</button>
+        </div></div>
+      <div class="rail" id="filtRail" style="padding:12px 0"></div>
+    </div></div>
+    <div class="split">
+      <div><div class="wrap">
+        <div style="padding:14px 0 4px" class="count" id="resCount"></div>
+        <div id="results"></div>
+      </div></div>
+      <div class="map-pane"><div class="map" id="map">
+        <div class="road" style="left:0;right:0;top:38%;height:10px"></div>
+        <div class="road" style="left:0;right:0;top:66%;height:6px"></div>
+        <div class="road" style="top:0;bottom:0;left:30%;width:8px"></div>
+        <div class="road" style="top:0;bottom:0;left:62%;width:6px"></div>
+        <div class="map-tools">
+          <button class="iconbtn" aria-label="Zoom in">${ic("i-plus")}</button>
+          <button class="iconbtn" aria-label="Zoom out">${ic("i-minus")}</button>
+          <button class="iconbtn" aria-label="Locate me">${ic("i-locate")}</button></div>
+        <div class="map-note">Hover a result to find it on the map</div>
+      </div></div>
+    </div>
+    <button class="fab" data-mapfab>${ic("i-map")}Map</button>`;
+  paintSearch();
+}
+function paintSearch(){
+  $("#filtRail").innerHTML =
+    `<button class="chip ${S.filters.size||S.price?"on":""}" data-filter-open>Filters${S.filters.size?` · ${S.filters.size}`:""}</button>`+
+    ["Open now","Generator","Borehole","USD cash","EcoCash","Wi-Fi"].map(f=>
+      `<button class="chip ${S.filters.has(f)?"on":""}" data-quickfilter="${esc(f)}">${esc(f)}</button>`).join("");
+  const list=PLACES.filter(matches).filter(p=>!S.filters.has("Open now")||p.open);
+  loadThen("#results",skRows(5),()=>{
+    $("#resCount").textContent=`${list.length} place${list.length===1?"":"s"} near Avondale`;
+    setTimeout(paintPins,0);
+    return list.length?list.map(rowHTML).join("")
+      :`<div class="empty"><div class="frieze"></div><h3>Nothing matching those filters</h3>
+        <p>Clearing one or two usually does it.</p>
+        <button class="btn btn-quiet" data-clearfilters>Clear filters</button></div>`;
+  },520);
+}
+function paintPins(){
+  const map=$("#map"); if(!map) return;
+  map.querySelectorAll(".pin").forEach(n=>n.remove());
+  PLACES.filter(matches).filter(p=>!S.filters.has("Open now")||p.open).forEach(p=>{
+    const b=document.createElement("button");
+    b.className="pin"; b.dataset.pin=p.id;
+    b.style.left=p.pin[0]+"%"; b.style.top=p.pin[1]+"%";
+    b.setAttribute("aria-label",p.name);
+    b.innerHTML=`<svg viewBox="0 0 100 116" width="30"><use href="#zelp-mark"/></svg>`;
+    map.appendChild(b);
+  });
+}
+
+/* ==================== DETAIL ==================== */
+function reviewHTML(r,i,pid,owner){
+  return `<div class="review ${r.pending?"pending":""}">
+    <div class="rev-head">${av(r.n)}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14.5px">${esc(r.n)}</div>
+        <div style="font-size:12.5px;color:var(--ink-3)" class="num">${r.pending?"Posting…":esc(r.d)}</div>
+      </div>${stars(r.s)}</div>
+    <p style="margin:0;font-size:14.5px;color:var(--ink-2)">${esc(r.t)}</p>
+    ${r.tags&&r.tags.length?`<div class="badges" style="margin-top:9px">${r.tags.map(t=>`<span class="tagchip">${esc(t)}</span>`).join("")}</div>`:""}
+    ${r.ph?`<div class="photostrip" style="margin-top:10px">${Array.from({length:r.ph},(_,k)=>
+        pic(P(pid).scene,(P(pid).pal+k+1)%PAL.length)).join("")}</div>`:""}
+    ${r.reply?`<div class="owner-reply ${r.reply.pending?"pending":""}">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:5px">
+          <span class="badge ok">Owner</span>
+          <span style="font-size:12px;color:var(--ink-3)">${r.reply.pending?"Sending…":esc(r.reply.d)}</span></div>
+        <p style="margin:0;font-size:14px;color:var(--ink-2)">${esc(r.reply.t)}</p></div>`:""}
+    <div class="rev-acts"><button>Helpful</button><button>Funny</button><button>Share</button>
+      ${owner&&!r.reply?`<button data-reply="${i}" style="color:var(--flame)">Reply</button>`:""}</div></div>`;
+}
+function renderDetail(){
+  const p=P(S.detailId); if(!p) return;
+  const dist=[62,24,8,4,2], sv=S.saved.has(p.id);
+  $("#s-detail").innerHTML=`
+    <div class="detail-head">
+      <div class="mosaic">${[0,1,2,3,4].map(k=>pic(p.scene,(p.pal+k)%PAL.length)).join("")}</div>
+      <button class="iconbtn float-back" data-back aria-label="Back">${ic("i-back")}</button>
+      <button class="iconbtn float-save ${sv?"on":""}" data-save="${p.id}" aria-pressed="${sv}" aria-label="Save">${ic("i-heart")}</button>
+      <div class="gallery-pill num">1 / ${p.photos}</div>
+    </div>
+    <div class="detail-body"><div class="wrap"><div class="detail-grid">
+      <div>
+        <h1 style="font-size:28px;font-weight:600;margin-bottom:8px">${esc(p.name)}</h1>
+        <div class="num" style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:14px;color:var(--ink-2)">
+          <span class="rate" style="color:var(--ink)">${ic("i-star")}${p.rating.toFixed(1)}</span>
+          <span>${p.reviews} reviews</span><span>·</span><span>${p.price}</span><span>·</span>
+          <span>${esc(p.cat)}</span><span>·</span><span>${esc(p.hood)}</span></div>
+        <div style="margin:12px 0 18px">${statusOf(p)}</div>
+        <p style="font-size:15.5px;color:var(--ink-2);margin-bottom:22px">${esc(p.blurb)}</p>
+        <div class="act-row">
+          <button class="act">${ic("i-nav")}Directions</button>
+          <button class="act">${ic("i-phone")}Call</button>
+          <button class="act">${ic("i-chat")}WhatsApp</button>
+          <button class="act">${ic("i-share")}Share</button></div>
+        <div class="badges" style="margin-top:20px">${p.badges.map(b=>
+          `<span class="badge" style="font-size:12px;padding:6px 11px">${esc(b)}</span>`).join("")}</div>
+
+        <div class="frieze" style="margin:26px 0"></div>
+        <h2 class="h-sec">Photos from visitors</h2>
+        <div class="photostrip">${Array.from({length:7},(_,k)=>pic(p.scene,(p.pal+k)%PAL.length)).join("")}</div>
+
+        <div class="hr"></div>
+        <h2 class="h-sec">Ratings</h2>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center">
+          <div style="text-align:center">
+            <div class="num" style="font-family:var(--display);font-size:44px;font-weight:600;line-height:1">${p.rating.toFixed(1)}</div>
+            ${stars(Math.round(p.rating))}
+            <div class="num" style="font-size:12.5px;color:var(--ink-3);margin-top:4px">${p.reviews} reviews</div></div>
+          <div style="display:grid;gap:7px">${dist.map((v,i)=>
+            `<div class="dist"><span class="num">${5-i}</span>
+              <div class="track"><div class="fill" style="width:${v}%"></div></div>
+              <span class="num">${Math.round(p.reviews*v/100)}</span></div>`).join("")}</div></div>
+
+        <div class="hr"></div>
+        <h2 class="h-sec">Reviews</h2>
+        <div class="rail" style="margin-bottom:6px">
+          <button class="chip on">Most recent</button><button class="chip">Highest</button>
+          <button class="chip">Lowest</button><button class="chip">With photos</button></div>
+        <div id="revList">${p.revs.map((r,i)=>reviewHTML(r,i,p.id,false)).join("")}</div>
+        <div style="height:20px"></div>
+      </div>
+      <aside class="detail-aside">
+        <div class="card-surface" style="padding:18px">
+          <div class="eyebrow" style="margin-bottom:12px">Today</div>
+          <div class="num" style="font-size:15px;font-weight:600;margin-bottom:4px">
+            ${p.open?"Open until "+p.closes:"Closed · "+p.closes}</div>
+          <div style="font-size:13.5px;color:var(--ink-3);margin-bottom:18px">Mon–Fri 11:00–22:00 · Sat–Sun 10:00–23:00</div>
+          <button class="btn btn-primary btn-block" data-review="${p.id}">Write a review</button>
+        </div>
+        <div class="card-surface" style="padding:18px;margin-top:14px">
+          <div class="eyebrow" style="margin-bottom:10px">Good to know</div>
+          <div style="display:grid;gap:9px;font-size:13.5px;color:var(--ink-2)">
+            ${p.badges.includes("Generator")?`<div style="display:flex;gap:9px">${ic("i-check")}Stays open through load-shedding</div>`:""}
+            ${p.badges.includes("USD cash")?`<div style="display:flex;gap:9px">${ic("i-check")}Takes USD cash</div>`:""}
+            ${p.badges.includes("EcoCash")?`<div style="display:flex;gap:9px">${ic("i-check")}EcoCash accepted</div>`:""}
+            ${p.badges.includes("Parking")?`<div style="display:flex;gap:9px">${ic("i-check")}Off-street parking</div>`:""}
+          </div>
+        </div>
+      </aside>
+    </div></div>
+    <div class="wrap sticky-cta"><button class="btn btn-primary btn-block" data-review="${p.id}">Write a review</button></div>
+    <div style="height:24px"></div>${footer()}</div>`;
+}
+
+/* ==================== SAVED / MINE / YOU ==================== */
+function renderSaved(){
+  const list=PLACES.filter(p=>S.saved.has(p.id));
+  $("#s-saved").innerHTML=`
+    <div class="topbar topbar-btm"><div class="wrap"><div class="topbar-row" style="padding-bottom:12px">
+      <h1 style="font-size:24px;font-weight:600">Saved</h1></div></div></div>
+    <div class="wrap"><div class="sec" id="savedWrap"></div></div>${footer()}`;
+  loadThen("#savedWrap",skCards(4),()=> list.length
+    ? `<div class="count num" style="margin-bottom:14px">${list.length} place${list.length===1?"":"s"}</div>
+       <div class="grid-cards">${list.map(cardHTML).join("")}</div>`
+    : `<div class="empty"><div class="frieze"></div><h3>Nothing saved yet</h3>
+       <p>Tap the heart on any place and it lands here.</p>
+       <button class="btn btn-primary" data-go="explore">Start exploring</button></div>`);
+}
+function renderMine(){
+  $("#s-reviews").innerHTML=`
+    <div class="topbar topbar-btm"><div class="wrap"><div class="topbar-row" style="padding-bottom:12px">
+      <h1 style="font-size:24px;font-weight:600">My reviews</h1></div></div></div>
+    <div class="wrap"><div class="sec">${
+      S.mine.length ? S.mine.map(r=>{const p=P(r.id);return `
+        <div class="review ${r.pending?"pending":""}" style="border-top:0;border-bottom:1px solid var(--line-2)">
+          <div class="rev-head">${pic(p.scene,p.pal,"","width:44px;height:44px;flex:0 0 auto")}
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:14.5px">${esc(p.name)}</div>
+              <div style="font-size:12.5px;color:var(--ink-3)">${r.pending?"Posting…":esc(r.when)}</div>
+            </div>${stars(r.s)}</div>
+          <p style="margin:0;font-size:14.5px;color:var(--ink-2)">${esc(r.t||"No note added.")}</p></div>`}).join("")
+      : `<div class="empty"><div class="frieze"></div><h3>You haven't reviewed anything yet</h3>
+         <p>Reviews are what make this thing worth opening. Yours counts.</p>
+         <button class="btn btn-primary" data-go="explore">Find a place</button></div>`
+    }</div></div>${footer()}`;
+}
+function renderYou(){
+  $("#s-you").innerHTML=`
+    <div class="topbar topbar-btm"><div class="wrap"><div class="topbar-row" style="padding-bottom:12px">
+      <h1 style="font-size:24px;font-weight:600">You</h1></div></div></div>
+    <div class="wrap"><div class="sec">
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:26px">
+        <div class="av" style="width:58px;height:58px;font-size:20px;background:linear-gradient(140deg,#D9502B,#F2B133)">R</div>
+        <div><div style="font-family:var(--display);font-size:19px;font-weight:600">Rumbi C.</div>
+          <div class="num" style="font-size:13.5px;color:var(--ink-2)">${S.mine.length} reviews · joined 2024 · Avondale</div></div></div>
+      <div class="opt"><div><b>Appearance</b><span>Light or dark</span></div>
+        <button class="sw" data-sw="theme" role="switch" aria-checked="false"><i></i></button></div>
+      <div class="opt"><div><b>Prices in USD</b><span>Switch off to show ZWG</span></div>
+        <button class="sw on" data-sw="usd" role="switch" aria-checked="true"><i></i></button></div>
+      <div class="opt"><div><b>Data saver</b><span>Smaller photos on mobile data</span></div>
+        <button class="sw on" data-sw="data" role="switch" aria-checked="true"><i></i></button></div>
+      <div class="opt"><div><b>Simulate a bad connection</b><span>Slower loading and frequent failures — for testing the optimistic states</span></div>
+        <button class="sw" data-sw="slow" role="switch" aria-checked="false"><i></i></button></div>
+      <div style="margin-top:26px"><button class="btn btn-quiet btn-block" data-go="bizhome">${ic("i-shop")}Switch to business</button></div>
+    </div></div>${footer()}`;
+}
+
+/* ==================== BUSINESS ==================== */
+function renderBizHome(){
+  const rows=[["Reply to every review","Answer publicly. A good reply is worth more than a good rating."],
+    ["Keep your hours honest","The most common complaint on Zelp is a place that was shut."],
+    ["Say you have a generator","People filter for it. It is the single most-used filter in Harare."],
+    ["See who's looking","Views, calls and direction requests, week by week."]];
+  $("#s-bizhome").innerHTML=`
+    <div class="biz-hero"><div class="wrap">
+      <p class="eyebrow" style="color:rgba(247,241,231,.6);margin-bottom:12px">Zelp for business</p>
+      <h1 class="h-ed">Your customers are already talking. Join the conversation.</h1>
+      <p>Claiming your listing is free and takes about two minutes. We verify by phoning the number already on your page.</p>
+      <div style="display:flex;gap:10px;margin-top:24px;flex-wrap:wrap">
+        <button class="btn btn-primary" data-claim>Claim your listing</button>
+        <button class="btn btn-quiet" data-mode="business">See the dashboard</button></div>
+    </div></div>
+    <div class="wrap"><div class="sec">
+      <div class="grid-cards" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+        ${rows.map(([t,s],i)=>`<div class="card-surface" style="padding:20px">
+          <div class="num" style="font-family:var(--display);font-size:13px;font-weight:600;color:var(--flame);margin-bottom:10px">0${i+1}</div>
+          <h3 style="font-size:16.5px;font-weight:600;margin-bottom:6px">${t}</h3>
+          <p style="font-size:14px;color:var(--ink-2)">${s}</p></div>`).join("")}
+      </div>
+      <div class="card-surface" style="padding:24px;margin-top:22px;display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+        <div style="flex:1;min-width:220px">
+          <h3 class="h-ed" style="font-size:20px;margin-bottom:6px">No listing yet?</h3>
+          <p style="color:var(--ink-2);font-size:14.5px">Add your business and it goes live once a moderator checks it — usually the same day.</p></div>
+        <button class="btn btn-quiet" data-claim>Add a business</button></div>
+    </div></div>${footer()}`;
+}
+function sparkline(vals,color){
+  const w=100,h=26,mx=Math.max(...vals),mn=Math.min(...vals);
+  const pts=vals.map((v,i)=>`${(i/(vals.length-1)*w).toFixed(1)},${(h-2-((v-mn)/((mx-mn)||1))*(h-6)).toFixed(1)}`).join(" ");
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function renderBizDash(){
+  const mx=Math.max(...WEEK.map(d=>d.v));
+  $("#s-bizdash").innerHTML=`
+    <div class="topbar topbar-btm"><div class="wrap"><div class="topbar-row" style="padding-bottom:12px;gap:12px">
+      <div style="flex:1"><h1 style="font-size:22px;font-weight:600">${esc(OWNER)}</h1>
+        <div style="font-size:13px;color:var(--ink-2);display:flex;gap:7px;align-items:center;margin-top:3px">
+          <span class="badge ok">Verified</span><span>Avondale · Café</span></div></div>
+      <button class="btn btn-quiet btn-sm" data-open="2">${ic("i-eye")}Public page</button>
+    </div></div></div>
+    <div class="wrap"><div class="sec">
+      <div class="stat-grid" id="bizStats"></div>
+
+      <div class="card-surface" style="padding:20px;margin-top:22px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+          <h3 style="font-size:16px;font-weight:600">Profile views</h3>
+          <span class="num" style="font-size:13px;color:var(--ink-3)">Last 7 days</span></div>
+        <svg class="chart" viewBox="0 0 340 170" preserveAspectRatio="none" role="img" aria-label="Profile views, last seven days">
+          ${WEEK.map((d,i)=>{const bh=(d.v/mx)*118, x=14+i*46;
+            return `<rect class="bar" x="${x}" y="${132-bh}" width="26" height="${bh}" rx="5"/>
+                    <text x="${x+13}" y="150" text-anchor="middle">${d.d}</text>
+                    <text x="${x+13}" y="${126-bh}" text-anchor="middle" style="font-weight:600">${d.v}</text>`}).join("")}
+        </svg>
+      </div>
+
+      <h3 style="font-size:16px;font-weight:600;margin:26px 0 12px">Needs your attention</h3>
+      <div class="todo"><span class="dotm"></span><div style="flex:1">
+        <b style="display:block;font-size:14.5px">2 reviews without a reply</b>
+        <span style="font-size:13.5px;color:var(--ink-2)">One is a 3-star about the card machine. Worth answering.</span></div>
+        <button class="btn btn-quiet btn-sm" data-go="bizreviews">Reply</button></div>
+      <div class="todo"><span class="dotm" style="background:var(--gold)"></span><div style="flex:1">
+        <b style="display:block;font-size:14.5px">Your Sunday hours are blank</b>
+        <span style="font-size:13.5px;color:var(--ink-2)">People assume closed. Say so explicitly and you'll get fewer wasted trips.</span></div>
+        <button class="btn btn-quiet btn-sm" data-go="bizprofile">Fix hours</button></div>
+      <div class="todo"><span class="dotm" style="background:var(--green)"></span><div style="flex:1">
+        <b style="display:block;font-size:14.5px">Add 3 more photos</b>
+        <span style="font-size:13.5px;color:var(--ink-2)">Listings with 10+ photos get about a third more direction requests.</span></div>
+        <button class="btn btn-quiet btn-sm" data-go="bizprofile">Add photos</button></div>
+    </div></div>`;
+  const stats=[["Profile views","1,284","up","+12%",[92,118,104,131,142,168,148]],
+    ["Calls","96","up","+8%",[9,11,8,14,12,17,15]],
+    ["Direction requests","211","down","−4%",[38,34,31,29,33,28,26]],
+    ["Saves","148","up","+21%",[12,14,19,17,24,28,31]]];
+  loadThen("#bizStats",Array(4).fill(skStat()).join(""),()=>stats.map(([k,v,dir,d,sp])=>`
+    <div class="stat"><div class="k">${k}</div><div class="v num">${v}</div>
+      <span class="delta ${dir}">${d} vs last week</span>
+      ${sparkline(sp,dir==="up"?"var(--green)":"var(--closed)")}</div>`).join(""),760);
+}
+function renderBizReviews(){
+  const p=PLACES.find(x=>x.name===OWNER);
+  $("#s-bizreviews").innerHTML=`
+    <div class="topbar topbar-btm"><div class="wrap"><div class="topbar-row" style="padding-bottom:12px">
+      <h1 style="font-size:22px;font-weight:600">Reviews</h1></div></div></div>
+    <div class="wrap"><div class="sec">
+      <div class="notice" style="margin-bottom:20px">${ic("i-shield")}
+        <span><b>A reply is public and permanent.</b> Answer the specific thing, say what's changed, and never post a customer's personal details.</span></div>
+      <div class="rail" style="margin-bottom:8px">
+        <button class="chip on">All</button><button class="chip">Unanswered · 2</button>
+        <button class="chip">1–3 stars</button><button class="chip">With photos</button></div>
+      <div id="bizRevList">${p.revs.map((r,i)=>reviewHTML(r,i,p.id,true)).join("")}</div>
+    </div></div>`;
+}
+function renderBizProfile(){
+  const p=PLACES.find(x=>x.name===OWNER);
+  $("#s-bizprofile").innerHTML=`
+    <div class="topbar topbar-btm"><div class="wrap"><div class="topbar-row" style="padding-bottom:12px">
+      <h1 style="font-size:22px;font-weight:600">Your listing</h1></div></div></div>
+    <div class="wrap"><div class="sec" style="max-width:720px">
+      <h3 style="font-size:16px;font-weight:600;margin-bottom:12px">Basics</h3>
+      <div class="field"><label for="bName">Business name</label><input class="inp" id="bName" value="${esc(p.name)}"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field"><label for="bCat">Category</label><input class="inp" id="bCat" value="${esc(p.cat)}"></div>
+        <div class="field"><label for="bHood">Suburb</label><input class="inp" id="bHood" value="${esc(p.hood)}"></div></div>
+      <div class="field"><label for="bPhone">Phone</label><input class="inp" id="bPhone" value="+263 77 000 0000" inputmode="tel"></div>
+
+      <div class="hr"></div>
+      <h3 style="font-size:16px;font-weight:600;margin-bottom:6px">Opening hours</h3>
+      <p style="font-size:13.5px;color:var(--ink-2);margin-bottom:12px">Wrong hours are the number one complaint. Say "Closed" out loud rather than leaving it blank.</p>
+      ${HOURS.map(([d,o,c])=>`<div class="hours-row"><span style="font-weight:600">${d}</span>
+        <span class="num" style="color:${o==="Closed"?"var(--closed)":"var(--ink-2)"}">${o==="Closed"?"Closed":o+" – "+c}</span>
+        <button class="btn btn-quiet btn-sm">Edit</button></div>`).join("")}
+
+      <div class="hr"></div>
+      <h3 style="font-size:16px;font-weight:600;margin-bottom:6px">Good to know</h3>
+      <p style="font-size:13.5px;color:var(--ink-2);margin-bottom:12px">These are the filters people actually use. Only tick what's true — reviewers will call you out.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${BADGES.map(b=>
+        `<button class="chip ${p.badges.includes(b)?"on":""}" data-bizbadge="${esc(b)}">${esc(b)}</button>`).join("")}</div>
+
+      <div class="hr"></div>
+      <h3 style="font-size:16px;font-weight:600;margin-bottom:12px">Photos</h3>
+      <div class="photo-tiles">
+        ${Array.from({length:5},(_,k)=>pic(p.scene,(p.pal+k)%PAL.length,"","aspect-ratio:1")).join("")}
+        <button class="add">${ic("i-plus")}<span style="font-size:11.5px;font-weight:600">Add</span></button></div>
+
+      <div style="position:sticky;bottom:0;padding:18px 0;background:linear-gradient(0deg,var(--stone) 70%,transparent)">
+        <button class="btn btn-primary btn-block" id="saveListing">Save changes</button></div>
+    </div></div>`;
+}
+
+/* ==================== LEGAL ==================== */
+function legalPage(kind){
+  const S_=kind==="terms"?TERMS:PRIVACY;
+  return `<div class="legal"><div class="legal-hd">
+      <div class="flagline" style="max-width:120px;margin-bottom:20px"></div>
+      <h1>${S_.title}</h1>
+      <div class="meta num">Version ${S_.v} · Last updated ${S_.date} · Zelp (Private) Limited, Harare</div>
+    </div>
+    <div class="legal-grid">
+      <nav class="toc"><p class="eyebrow" style="margin-bottom:10px">On this page</p><ul>
+        ${S_.s.map((x,i)=>`<li><button data-jump="${kind}-${i}">${i+1}. ${x.h}</button></li>`).join("")}
+      </ul></nav>
+      <div class="prose">
+        <div class="notice" style="margin-bottom:26px">${ic("i-shield")}
+          <span><b>Draft for review, not legal advice.</b> This is written to be a realistic starting point that reflects Zimbabwean law as at July 2026. Have a registered legal practitioner review it before you publish.</span></div>
+        ${S_.s.map((x,i)=>`<h2 id="${kind}-${i}">${i+1}. ${x.h}</h2>${x.b}`).join("")}
+      </div>
+    </div></div>${footer()}`;
+}
+const TERMS={title:"Terms of service",v:"1.0",date:"29 July 2026",s:[
+ {h:"Who we are",b:`<p>Zelp is operated by <strong>Zelp (Private) Limited</strong>, a company registered in Zimbabwe with its registered office in Harare. In these terms, "Zelp", "we" and "us" mean that company, and "you" means the person using the service.</p>
+ <p>You can reach us at <a href="#" onclick="return false">hello@zelp.co.zw</a>.</p>`},
+ {h:"Accepting these terms",b:`<p>By creating an account, writing a review, claiming a listing, or simply browsing Zelp, you agree to these terms. If you don't agree with them, please don't use the service.</p>
+ <p>If you're agreeing on behalf of a business, you confirm you're authorised to bind that business.</p>`},
+ {h:"Your account",b:`<p>You must be <strong>18 or older</strong> to hold a Zelp account. One person, one account. Keep your details accurate and your password to yourself — you're responsible for what happens under your login.</p>
+ <p>Tell us promptly if you think someone else has got into your account.</p>`},
+ {h:"Reviews and other content you post",b:`<p>Reviews are the whole point of Zelp, so we take them seriously. When you post, you confirm that:</p><ul>
+ <li>the review describes your own, first-hand experience of the place;</li>
+ <li>you have no undisclosed stake in the business, and no competing business of your own;</li>
+ <li>nobody paid you, fed you, or discounted your bill in exchange for the review;</li>
+ <li>it contains no hate speech, harassment, threats, or content that is unlawful in Zimbabwe;</li>
+ <li>it does not publish another person's personal information — no phone numbers, ID numbers, home addresses or number plates;</li>
+ <li>any photographs are yours to post.</li></ul>
+ <p>Complaints about service are welcome. Personal attacks on named staff are not.</p>`},
+ {h:"The licence you give us",b:`<p>You keep ownership of everything you post. You give us a non-exclusive, worldwide, royalty-free licence to host, store, reproduce, adapt for formatting, publish and display your content in connection with running and promoting Zelp. That licence continues for content you've posted even after you close your account, though we'll remove your name from it on request.</p>`},
+ {h:"Moderation and removal",b:`<p>We may remove content or suspend accounts where we reasonably believe these terms have been broken. We aim to tell you why and to give you a way to respond, unless the law requires otherwise.</p>
+ <p>We don't remove a review simply because a business dislikes it. We do investigate credible reports that a review is fake, bought, or posted by a competitor.</p>`},
+ {h:"Business listings and claims",b:`<p>A listing may be created from public information before its owner joins Zelp. If you claim a listing, you confirm you're authorised to represent the business, and you agree to keep its details accurate.</p>
+ <p>Verification usually involves a call to the number on the listing. We may withdraw a claim if verification fails or if the listing is misused.</p>
+ <p>Owner replies are public, permanent and attributed to the business.</p>`},
+ {h:"What you may not do",b:`<ul><li>Post fake, incentivised or bulk reviews, or pay anyone to do so.</li>
+ <li>Scrape, crawl or bulk-download the service without our written permission.</li>
+ <li>Interfere with the service or attempt to gain unauthorised access to it, which may also be an offence under the Cyber and Data Protection Act [Chapter 12:07].</li>
+ <li>Use Zelp to advertise, spam, or collect other users' personal information.</li>
+ <li>Misrepresent your identity or your connection to a business.</li></ul>`},
+ {h:"Accuracy of listings",b:`<p>Opening hours, prices, payment methods and facilities are supplied by businesses and users, and things change quickly. We make reasonable efforts to keep listings current but we can't guarantee they are. Phone ahead if it matters.</p>
+ <p>Reviews are the opinions of the people who wrote them, not ours.</p>`},
+ {h:"Availability",b:`<p>We aim to keep Zelp available, but we don't promise it will be uninterrupted or error-free. We may change, suspend or withdraw features. The service is provided "as is" to the fullest extent permitted by law.</p>`},
+ {h:"Liability",b:`<p>Nothing in these terms excludes liability that cannot lawfully be excluded, including under the <strong>Consumer Protection Act [Chapter 14:44]</strong>.</p>
+ <p>Subject to that, we are not liable for indirect or consequential loss, loss of profits, or loss arising from your dealings with a business you found on Zelp. Your relationship with that business is between you and them.</p>`},
+ {h:"Indemnity",b:`<p>If a third party brings a claim against us because of content you posted or your breach of these terms, you agree to cover our reasonable costs in dealing with it.</p>`},
+ {h:"Ending your use",b:`<p>You can close your account at any time from Settings. We may suspend or close an account for a serious or repeated breach of these terms, or where we're required to by law.</p>`},
+ {h:"Changes to these terms",b:`<p>We may update these terms. If a change materially affects your rights we'll give you at least 14 days' notice in the app or by email. Continuing to use Zelp after that means you accept the new version.</p>`},
+ {h:"Governing law and disputes",b:`<p>These terms are governed by the laws of Zimbabwe. Talk to us first — most things are resolved by email. If they aren't, the courts of Zimbabwe sitting in Harare have jurisdiction.</p>`}]};
+const PRIVACY={title:"Privacy policy",v:"1.0",date:"29 July 2026",s:[
+ {h:"Scope and the law that applies",b:`<p>This policy explains what we do with personal information when you use Zelp. We are the <strong>data controller</strong>.</p>
+ <p>We process personal information in accordance with the <strong>Cyber and Data Protection Act [Chapter 12:07]</strong>. The <strong>Postal and Telecommunications Regulatory Authority of Zimbabwe (POTRAZ)</strong> is the Data Protection Authority under section 5 of that Act. In line with Statutory Instrument 155 of 2024, we hold a data controller's licence and have appointed a Data Protection Officer.</p>`},
+ {h:"What we collect",b:`<h3>You give us</h3><ul>
+ <li><strong>Account details</strong> — name or display name, email address, phone number, and a password.</li>
+ <li><strong>Content</strong> — reviews, ratings, photographs, saved lists and replies.</li>
+ <li><strong>Business verification</strong> — for claims, the name and role of the person claiming, and a contact number we can call.</li></ul>
+ <h3>We collect automatically</h3><ul>
+ <li><strong>Device and connection</strong> — device model, operating system, browser, and IP address.</li>
+ <li><strong>Usage</strong> — what you searched for, which listings you opened, which filters you used.</li>
+ <li><strong>Approximate location</strong> — derived from your IP address, so we can show places near you.</li></ul>
+ <h3>With your permission</h3><ul>
+ <li><strong>Precise location</strong> — only if you allow it, and only while you're using the app. You can withdraw this at any time in your device settings, and Zelp keeps working; we'll just ask you to type a suburb.</li>
+ <li><strong>Camera and photo library</strong> — only when you attach a photo to a review.</li></ul>`},
+ {h:"Why we process it",b:`<table><thead><tr><th>Purpose</th><th>Lawful basis</th></tr></thead><tbody>
+ <tr><td>Creating and running your account</td><td>Performance of a contract</td></tr>
+ <tr><td>Publishing your reviews and photos</td><td>Performance of a contract</td></tr>
+ <tr><td>Showing places near you</td><td>Consent (precise location)</td></tr>
+ <tr><td>Detecting fake reviews and fraud</td><td>Legitimate interest</td></tr>
+ <tr><td>Product analytics and improvement</td><td>Legitimate interest</td></tr>
+ <tr><td>Service emails and notifications</td><td>Performance of a contract</td></tr>
+ <tr><td>Marketing emails</td><td>Consent — opt in, and opt out any time</td></tr>
+ <tr><td>Responding to lawful requests</td><td>Legal obligation</td></tr></tbody></table>`},
+ {h:"What is public",b:`<p>Your display name, profile picture, reviews, ratings, photographs and review history are <strong>public</strong>. Anyone can see them, including people who don't have a Zelp account, and search engines may index them.</p>
+ <p>Your email address, phone number and precise location are <strong>never</strong> public.</p>`},
+ {h:"Who we share it with",b:`<p><strong>We do not sell your personal information.</strong> We share it only with:</p><ul>
+ <li><strong>Service providers</strong> who host, send email, process payments or provide maps for us, under contracts that limit them to our instructions.</li>
+ <li><strong>Businesses you interact with</strong> — an owner replying to your review sees the same public information everyone else does, not your contact details.</li>
+ <li><strong>Authorities</strong>, where we're required by law or a valid court order, and where we can, we'll tell you first.</li></ul>`},
+ {h:"Sending information outside Zimbabwe",b:`<p>Some of our providers host data outside Zimbabwe. Where that happens we rely on the transfer conditions in the Cyber and Data Protection Act, satisfying ourselves that the destination affords an adequate level of protection or putting contractual safeguards in place. You can ask us which providers and which countries.</p>`},
+ {h:"How long we keep it",b:`<table><thead><tr><th>What</th><th>How long</th></tr></thead><tbody>
+ <tr><td>Account details</td><td>While your account is open, then 90 days</td></tr>
+ <tr><td>Published reviews and photos</td><td>Kept after closure, with your name removed on request</td></tr>
+ <tr><td>Precise location</td><td>Not stored — used for the search and discarded</td></tr>
+ <tr><td>Usage and device logs</td><td>13 months</td></tr>
+ <tr><td>Business verification records</td><td>5 years after a claim ends</td></tr>
+ <tr><td>Records we must keep by law</td><td>As the law requires</td></tr></tbody></table>`},
+ {h:"Your rights",b:`<p>Under the Cyber and Data Protection Act you may:</p><ul>
+ <li>ask what personal information we hold about you and get a copy;</li>
+ <li>have inaccurate information corrected;</li>
+ <li>ask us to delete information where there's no good reason for us to keep it;</li>
+ <li>object to processing based on legitimate interest;</li>
+ <li>withdraw consent — for location or marketing — at any time;</li>
+ <li>complain to POTRAZ if you think we've got it wrong.</li></ul>
+ <p>Email our Data Protection Officer at <a href="#" onclick="return false">dpo@zelp.co.zw</a>. We respond within 30 days and won't charge you for a first request.</p>`},
+ {h:"Security and breaches",b:`<p>We encrypt data in transit, hash passwords, restrict staff access to what each role needs, and review access regularly. No system is perfectly secure, so we also plan for failure.</p>
+ <p>If a breach occurs that puts your information at risk, we notify POTRAZ within <strong>24 hours</strong> of becoming aware of it, as required by SI 155 of 2024, and we tell affected users without undue delay.</p>`},
+ {h:"Children",b:`<p>Zelp is not for under-18s and we don't knowingly collect their information. If you believe a child has created an account, email us and we'll remove it.</p>`},
+ {h:"Cookies and similar technologies",b:`<p>We use a small number of cookies: <strong>essential</strong> ones to keep you signed in and keep the service secure, and <strong>analytics</strong> ones to understand which features get used. Analytics cookies are off until you accept them. You can change your mind from Settings, and your browser can block cookies entirely — the site still works, you'll just sign in more often.</p>`},
+ {h:"Changes to this policy",b:`<p>We'll post any changes here and update the version and date at the top. If a change materially affects you, we'll tell you in the app or by email before it takes effect.</p>`},
+ {h:"Contact",b:`<p><strong>Zelp (Private) Limited</strong><br>Data Protection Officer<br>Harare, Zimbabwe<br>
+ <a href="#" onclick="return false">dpo@zelp.co.zw</a></p>
+ <p>You may also complain directly to POTRAZ as the Data Protection Authority.</p>`}]};
+
+/* ==================== NAV ==================== */
+const RENDER={explore:renderExplore,search:renderSearch,saved:renderSaved,reviews:renderMine,you:renderYou,
+  bizhome:renderBizHome,bizdash:renderBizDash,bizreviews:renderBizReviews,bizprofile:renderBizProfile,
+  terms:()=>{$("#s-terms").innerHTML=legalPage("terms")},privacy:()=>{$("#s-privacy").innerHTML=legalPage("privacy")}};
+function go(name){
+  if(name==="explore"&&S.mode==="business") S.mode="consumer";
+  if(name.startsWith("biz")&&name!=="bizhome") S.mode="business";
+  if(name!=="detail") S.prev=name;
+  S.screen=name;
+  $$(".screen").forEach(s=>s.classList.remove("on"));
+  const el=$("#s-"+name); if(!el) return;
+  el.classList.add("on");
+  if(RENDER[name]) RENDER[name]();
+  renderChrome();
+  window.scrollTo({top:0,behavior:"instant"});
+}
+function openDetail(id){
+  S.detailId=id; renderDetail();
+  $$(".screen").forEach(s=>s.classList.remove("on"));
+  $("#s-detail").classList.add("on"); S.screen="detail";
+  window.scrollTo({top:0,behavior:"instant"});
+}
+
+/* ==================== SHEETS ==================== */
+function openSheet(id){$("#scrim").classList.add("on");
+  $$(".sheet").forEach(s=>s.classList.remove("on")); $("#sheet-"+id).classList.add("on");}
+function closeSheets(){$("#scrim").classList.remove("on"); $$(".sheet").forEach(s=>s.classList.remove("on"));}
+$("#scrim").addEventListener("click",closeSheets);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheets()});
+
+function openReview(id){
+  const p=P(id); S.reviewId=id; S.stars=0; S.tags.clear();
+  $("#revFor").textContent=`${p.name} · ${p.hood}`;
+  $("#revText").value=""; $("#tagField").hidden=true;
+  paintStars(); $("#postReview").disabled=true; openSheet("review");
+}
+function paintStars(){
+  $("#starPick").innerHTML=[1,2,3,4,5].map(i=>
+    `<button data-star="${i}" aria-label="${i} star${i>1?"s":""}">${ic("i-star","i "+(i<=S.stars?"on":""))}</button>`).join("");
+  $("#starLabel").textContent=["How was it?","Not good","Below par","Fine","Good","Excellent"][S.stars];
+}
+function paintTags(){
+  $("#quickTags").innerHTML=(S.stars>=4?QUICK.hi:QUICK.lo).map(t=>
+    `<button class="chip ${S.tags.has(t)?"on":""}" data-tag="${esc(t)}">${esc(t)}</button>`).join("");
+  $("#tagField").hidden=false;
+}
+function renderFilterSheet(){
+  $("#badgeFilters").innerHTML=BADGES.map(b=>
+    `<button class="chip ${S.filters.has(b)?"on":""}" data-badge="${esc(b)}">${esc(b)}</button>`).join("");
+  $("#priceFilters").innerHTML=["$","$$","$$$"].map(p=>
+    `<button class="chip ${S.price===p?"on":""}" data-price="${p}" style="flex:1">${p}</button>`).join("");
+}
+
+/* ============ OPTIMISTIC OPERATIONS ============ */
+function optimisticSave(id){
+  const was=S.saved.has(id);
+  was?S.saved.delete(id):S.saved.add(id);        /* 1. apply immediately */
+  repaintSaves(id,true);
+  net(480,0.10)
+    .then(()=>{ repaintSaves(id,false); toast(was?"Removed from saved":"Saved"); })
+    .catch(()=>{                                  /* 2. roll back on failure */
+      was?S.saved.add(id):S.saved.delete(id);
+      repaintSaves(id,false);
+      toast("Couldn't save — check your connection",true,"Retry");
+      S.retry=()=>optimisticSave(id);
+    });
+}
+function repaintSaves(id,pending){
+  $$(`[data-save="${id}"]`).forEach(b=>{
+    b.classList.toggle("on",S.saved.has(id));
+    b.classList.toggle("pending",!!pending);
+    b.setAttribute("aria-pressed",String(S.saved.has(id)));
+  });
+  if(S.screen==="saved"&&!pending) renderSaved();
+}
+function optimisticReview(){
+  const p=P(S.reviewId), text=$("#revText").value.trim(), s=S.stars, tags=[...S.tags];
+  const r={n:"Rumbi C.",s,d:"Just now",t:text||tags.join(" · ")||"No note added.",tags,pending:true};
+  const mineEntry={id:p.id,s,t:text,when:"Just now",pending:true};
+  p.revs.unshift(r); S.mine.unshift(mineEntry);
+  const prevRating=p.rating, prevCount=p.reviews;
+  p.rating=+(((prevRating*prevCount)+s)/(prevCount+1)).toFixed(2); p.reviews=prevCount+1;
+  closeSheets();
+  if(S.screen==="detail") renderDetail(); if(S.screen==="reviews") renderMine();
+  net(950,0.10)
+    .then(()=>{ r.pending=false; mineEntry.pending=false;
+      if(S.screen==="detail") renderDetail(); if(S.screen==="reviews") renderMine();
+      toast("Review posted"); })
+    .catch(()=>{ p.revs.shift(); S.mine.shift(); p.rating=prevRating; p.reviews=prevCount;
+      if(S.screen==="detail") renderDetail(); if(S.screen==="reviews") renderMine();
+      toast("Couldn't post your review — it's saved as a draft",true); });
+}
+function optimisticReply(){
+  const p=PLACES.find(x=>x.name===OWNER), i=S.replyIdx, text=$("#replyText").value.trim();
+  if(!text) return;
+  p.revs[i].reply={t:text,d:"Just now",pending:true};
+  closeSheets(); renderBizReviews();
+  net(880,0.10)
+    .then(()=>{ p.revs[i].reply.pending=false; renderBizReviews(); toast("Reply posted"); })
+    .catch(()=>{ delete p.revs[i].reply; renderBizReviews();
+      toast("Couldn't post your reply",true,"Retry"); S.retry=()=>{S.replyIdx=i;$("#replyText").value=text;optimisticReply()}; });
+}
+
+/* ==================== EVENTS ==================== */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-go],[data-open],[data-save],[data-cat],[data-quickfilter],[data-filter-open],"+
+    "[data-badge],[data-price],[data-star],[data-tag],[data-review],[data-back],[data-close],[data-pin],"+
+    "[data-clearfilters],[data-theme-toggle],[data-sw],[data-mode],[data-claim],[data-reply],[data-jump],"+
+    "[data-bizbadge],[data-mapfab],[data-toast-action]");
+  if(!t) return;
+  const d=t.dataset;
+  if(d.go!==undefined) return go(d.go);
+  if(t.hasAttribute("data-back")) return go(S.prev);
+  if(t.hasAttribute("data-close")) return closeSheets();
+  if(d.open) return openDetail(+d.open);
+  if(d.pin) return openDetail(+d.pin);
+  if(d.review) return openReview(+d.review);
+  if(d.save) return optimisticSave(+d.save);
+  if(t.hasAttribute("data-toast-action")){ $("#toast").classList.remove("on"); return S.retry&&S.retry(); }
+  if(t.hasAttribute("data-theme-toggle")) return toggleTheme();
+  if(d.mode!==undefined){ S.mode=d.mode; return go(d.mode==="business"?"bizdash":"explore"); }
+  if(t.hasAttribute("data-claim")) return openSheet("claim");
+  if(d.reply!==undefined){ S.replyIdx=+d.reply;
+    const p=PLACES.find(x=>x.name===OWNER);
+    $("#replyTo").textContent=`Replying to ${p.revs[+d.reply].n}`;
+    $("#replyText").value=""; return openSheet("reply"); }
+  if(d.jump){ const el=document.getElementById(d.jump); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); return; }
+  if(t.hasAttribute("data-clearfilters")){ S.filters.clear(); S.price=null; S.q="";
+    const q=$("#q"); if(q) q.value=""; renderFilterSheet(); return paintSearch(); }
+  if(d.cat){ S.cat=d.cat;
+    $$("#catRail .chip").forEach(c=>c.classList.toggle("on",c.dataset.cat===d.cat)); return paintFeeds(); }
+  if(d.quickfilter){ S.filters.has(d.quickfilter)?S.filters.delete(d.quickfilter):S.filters.add(d.quickfilter); return paintSearch(); }
+  if(t.hasAttribute("data-filter-open")){ renderFilterSheet(); return openSheet("filters"); }
+  if(d.badge){ S.filters.has(d.badge)?S.filters.delete(d.badge):S.filters.add(d.badge);
+    renderFilterSheet(); return paintSearch(); }
+  if(d.price){ S.price=S.price===d.price?null:d.price; renderFilterSheet(); return paintSearch(); }
+  if(d.bizbadge){ const p=PLACES.find(x=>x.name===OWNER); const k=p.badges.indexOf(d.bizbadge);
+    k>-1?p.badges.splice(k,1):p.badges.push(d.bizbadge); t.classList.toggle("on"); return; }
+  if(d.star){ S.stars=+d.star; paintStars(); paintTags(); $("#postReview").disabled=false; return; }
+  if(d.tag){ S.tags.has(d.tag)?S.tags.delete(d.tag):S.tags.add(d.tag); return paintTags(); }
+  if(t.hasAttribute("data-mapfab")) return toast("Map opens full screen on mobile");
+  if(d.sw!==undefined){
+    if(d.sw==="theme") return toggleTheme();
+    const on=t.classList.toggle("on"); t.setAttribute("aria-checked",String(on));
+    if(d.sw==="slow"){ S.slow=on; toast(on?"Simulating a bad connection":"Back to a normal connection"); }
+    return;
+  }
+});
+document.addEventListener("input",e=>{ if(e.target.id==="q"){ S.q=e.target.value.trim(); paintSearch(); }});
+document.addEventListener("mouseover",e=>{
+  const r=e.target.closest("[data-hover]"); if(!r) return;
+  const id=+r.dataset.hover; if(S.hot===id) return; S.hot=id;
+  $$(".pin").forEach(p=>p.classList.toggle("hot",+p.dataset.pin===id));
+});
+$("#postReview").addEventListener("click",optimisticReview);
+$("#postReply").addEventListener("click",optimisticReply);
+$("#submitClaim").addEventListener("click",()=>{
+  const n=$("#cName").value.trim();
+  closeSheets(); toast("Claim submitted — we'll call to verify");
+  setTimeout(()=>{ S.mode="business"; go("bizdash"); },900);
+  if(!n) return;
+});
+
+function toggleTheme(){
+  const dark=document.documentElement.dataset.theme==="dark";
+  document.documentElement.dataset.theme=dark?"light":"dark";
+  document.querySelector('meta[name="theme-color"]').content=dark?"#D9502B":"#101512";
+  $$('[data-sw="theme"]').forEach(s=>{s.classList.toggle("on",!dark);s.setAttribute("aria-checked",String(!dark))});
+}
+
+/* saveListing lives inside a re-rendered screen, so delegate it */
+document.addEventListener("click",e=>{
+  const b=e.target.closest("#saveListing"); if(!b) return;
+  const label=b.textContent; b.disabled=true; b.textContent="Saving…";
+  net(700,0.10).then(()=>{ b.disabled=false; b.textContent=label; toast("Listing updated"); })
+    .catch(()=>{ b.disabled=false; b.textContent=label; toast("Couldn't save your changes",true); });
+});
+
+/* ==================== INIT ==================== */
+if(matchMedia("(prefers-color-scheme: dark)").matches) toggleTheme();
+renderChrome(); renderExplore();
+setTimeout(()=>{ $("#splash").classList.add("gone"); }, 2100);
+
+</script>
+</body>
+</html>
