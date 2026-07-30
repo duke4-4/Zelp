@@ -9,6 +9,11 @@
 const siteConfig = useSiteConfig()
 const ogImageUrl = computed(() => new URL('/og-image.png', siteConfig.url).toString())
 
+// Zelp's colour system is light-first by design (no dark-mode toggle) --
+// don't retain an old browser/OS preference that would otherwise flip
+// Soapstone and Granite Ink into low-contrast.
+useColorMode().preference = 'light'
+
 useSeoMeta({
   ogSiteName: 'Zelp',
   ogType: 'website',

@@ -89,10 +89,10 @@ function hoursStateToRecord(state: Record<DayKey, DayHoursState>): Record<string
 // --- Socials: a handful of common platform URL fields, matching the shape
 // `businesses.socials` jsonb already assumes elsewhere in the app.
 const SOCIAL_FIELDS = [
-  { key: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/yourbusiness' },
-  { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/yourbusiness' },
-  { key: 'twitter', label: 'X / Twitter', placeholder: 'https://x.com/yourbusiness' },
-  { key: 'tiktok', label: 'TikTok', placeholder: 'https://tiktok.com/@yourbusiness' },
+  { key: 'facebook', label: 'Facebook' },
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'twitter', label: 'X / Twitter' },
+  { key: 'tiktok', label: 'TikTok' },
 ] as const
 
 function socialsStateFromRecord(socials: Record<string, unknown> | null | undefined): Record<string, string> {
@@ -231,11 +231,11 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
       </h2>
 
       <UFormField label="Business name" name="name" required>
-        <UInput v-model="state.name" placeholder="e.g. Mbare Fresh Produce" class="w-full" :disabled="submitting" />
+        <UInput v-model="state.name" class="w-full" :disabled="submitting" />
       </UFormField>
 
       <UFormField label="Description" name="description">
-        <UTextarea v-model="state.description" :rows="4" :maxlength="2000" placeholder="What makes this business worth visiting?" class="w-full" :disabled="submitting" />
+        <UTextarea v-model="state.description" :rows="4" :maxlength="2000" class="w-full" :disabled="submitting" />
       </UFormField>
 
       <UFormField label="Categories" name="categoryIds">
@@ -264,16 +264,16 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <UFormField label="Phone" name="phone">
-          <UInput v-model="state.phone" placeholder="+263 77 123 4567" class="w-full" :disabled="submitting" />
+          <UInput v-model="state.phone" class="w-full" :disabled="submitting" />
         </UFormField>
         <UFormField label="WhatsApp" name="whatsapp">
-          <UInput v-model="state.whatsapp" placeholder="+263 77 123 4567" class="w-full" :disabled="submitting" />
+          <UInput v-model="state.whatsapp" class="w-full" :disabled="submitting" />
         </UFormField>
         <UFormField label="Email" name="email">
-          <UInput v-model="state.email" type="email" placeholder="hello@business.co.zw" class="w-full" :disabled="submitting" />
+          <UInput v-model="state.email" type="email" class="w-full" :disabled="submitting" />
         </UFormField>
         <UFormField label="Website" name="website">
-          <UInput v-model="state.website" placeholder="https://business.co.zw" class="w-full" :disabled="submitting" />
+          <UInput v-model="state.website" class="w-full" :disabled="submitting" />
         </UFormField>
       </div>
     </section>
@@ -285,24 +285,24 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
       </h2>
 
       <UFormField label="Address" name="address">
-        <UInput v-model="state.address" placeholder="Street address" class="w-full" :disabled="submitting" />
+        <UInput v-model="state.address" class="w-full" :disabled="submitting" />
       </UFormField>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <UFormField label="City" name="city">
-          <UInput v-model="state.city" placeholder="e.g. Harare" class="w-full" :disabled="submitting" />
+          <UInput v-model="state.city" class="w-full" :disabled="submitting" />
         </UFormField>
         <UFormField label="Province" name="province">
-          <UInput v-model="state.province" placeholder="e.g. Harare Province" class="w-full" :disabled="submitting" />
+          <UInput v-model="state.province" class="w-full" :disabled="submitting" />
         </UFormField>
       </div>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <UFormField label="Latitude" name="lat" hint="Optional">
-          <UInput v-model.number="state.lat" type="number" step="any" placeholder="-17.8292" class="w-full" :disabled="submitting" />
+          <UInput v-model.number="state.lat" type="number" step="any" class="w-full" :disabled="submitting" />
         </UFormField>
         <UFormField label="Longitude" name="lng" hint="Optional">
-          <UInput v-model.number="state.lng" type="number" step="any" placeholder="31.0522" class="w-full" :disabled="submitting" />
+          <UInput v-model.number="state.lng" type="number" step="any" class="w-full" :disabled="submitting" />
         </UFormField>
       </div>
 
@@ -363,7 +363,7 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <UFormField v-for="field in SOCIAL_FIELDS" :key="field.key" :label="field.label" :name="`socials.${field.key}`">
-          <UInput v-model="state.socials[field.key]" :placeholder="field.placeholder" class="w-full" :disabled="submitting" />
+          <UInput v-model="state.socials[field.key]" class="w-full" :disabled="submitting" />
         </UFormField>
       </div>
     </section>

@@ -13,6 +13,10 @@ export default defineNuxtConfig({
     '@vite-pwa/nuxt',
     '@nuxtjs/sitemap',
     '@nuxtjs/robots',
+    // Both are no-ops unless actually deployed on Vercel (they report to
+    // Vercel's own dashboard) -- safe to ship everywhere, silent elsewhere.
+    '@vercel/analytics/nuxt',
+    '@vercel/speed-insights/nuxt',
   ],
 
   css: ['~/assets/css/main.css'],
@@ -48,10 +52,8 @@ export default defineNuxtConfig({
   },
 
   colorMode: {
-    // Light by default for first-time visitors (the brand is explicitly
-    // "no dark-mode-by-default") -- the Navbar toggle lets users switch to
-    // dark, and that explicit choice persists via the module's own
-    // cookie/localStorage on later visits.
+    // Light-only, by design -- no dark mode toggle (see app.vue, which
+    // pins the preference to 'light' on every load).
     preference: 'light',
     fallback: 'light',
   },

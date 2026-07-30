@@ -232,9 +232,6 @@ useSeoMeta({
         <div class="flex flex-wrap items-center gap-2 pt-1">
           <UButton to="/forgot-password" label="Change password" icon="i-lucide-key-round" variant="outline" color="neutral" />
           <UButton label="Sign out" icon="i-lucide-log-out" variant="outline" color="neutral" :loading="signingOut" @click="handleSignOut" />
-          <!-- Also reachable from the desktop Navbar; kept here too since the
-               mobile bottom tab bar has no room for a 5th, non-route item. -->
-          <UColorModeButton variant="outline" color="neutral" />
         </div>
       </section>
     </template>
