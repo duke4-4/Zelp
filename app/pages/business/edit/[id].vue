@@ -5,6 +5,8 @@
 // — the `await` below additionally throws a real 404 if the id doesn't
 // resolve to a visible row at all, same pattern as business/[slug].vue.
 
+import type { UploadResult } from '~/composables/useUpload'
+
 definePageMeta({
   middleware: ['auth', 'business-owner'],
 })
@@ -60,6 +62,93 @@ async function withdrawToDraft() {
 async function handleSubmitted() {
   await refresh()
   await navigateTo({ path: '/business/dashboard', query: { business: businessId.value } })
+}
+
+// --- Photos (Phase 6) -------------------------------------------------
+// Every mutation here writes straight to `business_images` (via
+// useBusinessImages.ts) and then `refresh()`es the owned-business fetch,
+// same pattern as the status controls above — there's no separate "save"
+// step for photos, each upload/remove takes effect immediately.
+
+const logoImage = computed(() => business.value?.images.find(img => img.kind === 'logo') ?? null)
+const coverImage = computed(() => business.value?.images.find(img => img.kind === 'cover') ?? null)
+const galleryImages = computed(() => business.value?.images.filter(img => img.kind === 'gallery') ?? [])
+
+const imagesError = ref('')
+
+async function handleLogoUploaded(result: UploadResult) {
+  if (!business.value) return
+  imagesError.value = ''
+  try {
+    await upsertSingleBusinessImage(business.value.id, 'logo', result.url)
+    await refresh()
+  } catch (error) {
+    imagesError.value = error instanceof Error ? error.message : 'Could not save your logo.'
+  }
+}
+
+async function handleLogoRemoved() {
+  if (!logoImage.value) return
+  imagesError.value = ''
+  try {
+    await deleteBusinessImage(logoImage.value.id)
+    await refresh()
+  } catch (error) {
+    imagesError.value = error instanceof Error ? error.message : 'Could not remove your logo.'
+  }
+}
+
+async function handleCoverUploaded(result: UploadResult) {
+  if (!business.value) return
+  imagesError.value = ''
+  try {
+    await upsertSingleBusinessImage(business.value.id, 'cover', result.url)
+    await refresh()
+  } catch (error) {
+    imagesError.value = error instanceof Error ? error.message : 'Could not save your cover photo.'
+  }
+}
+
+async function handleCoverRemoved() {
+  if (!coverImage.value) return
+  imagesError.value = ''
+  try {
+    await deleteBusinessImage(coverImage.value.id)
+    await refresh()
+  } catch (error) {
+    imagesError.value = error instanceof Error ? error.message : 'Could not remove your cover photo.'
+  }
+}
+
+async function handleGalleryItemUploaded(imageId: string, result: UploadResult) {
+  imagesError.value = ''
+  try {
+    await updateBusinessImageUrl(imageId, result.url)
+    await refresh()
+  } catch (error) {
+    imagesError.value = error instanceof Error ? error.message : 'Could not save that gallery photo.'
+  }
+}
+
+async function handleGalleryItemRemoved(imageId: string) {
+  imagesError.value = ''
+  try {
+    await deleteBusinessImage(imageId)
+    await refresh()
+  } catch (error) {
+    imagesError.value = error instanceof Error ? error.message : 'Could not remove that gallery photo.'
+  }
+}
+
+async function handleGalleryAdd(result: UploadResult) {
+  if (!business.value) return
+  imagesError.value = ''
+  try {
+    await addGalleryImage(business.value.id, result.url, galleryImages.value.length)
+    await refresh()
+  } catch (error) {
+    imagesError.value = error instanceof Error ? error.message : 'Could not save that gallery photo.'
+  }
 }
 
 useSeoMeta({
@@ -119,6 +208,71 @@ useSeoMeta({
         variant="subtle"
         icon="i-lucide-alert-circle"
         :description="statusError"
+        class="mt-3"
+      />
+    </section>
+
+    <!-- Photos -->
+    <section class="border-line mb-8 rounded-[18px] border p-4">
+      <h2 class="text-ink mb-1 text-sm font-semibold">
+        Photos
+      </h2>
+      <p class="text-ink-muted mb-4 text-sm">
+        Add a logo, a cover photo, and a few gallery photos.
+      </p>
+
+      <div class="mb-6 flex flex-wrap gap-6">
+        <div class="flex flex-col gap-1.5">
+          <span class="text-ink-faint text-xs font-medium tracking-wide uppercase">Logo</span>
+          <UploadWidget
+            kind="logos"
+            :current-url="logoImage?.url"
+            shape="circle"
+            size-class="size-24"
+            label="logo"
+            @uploaded="handleLogoUploaded"
+            @removed="handleLogoRemoved"
+          />
+        </div>
+        <div class="flex min-w-56 flex-1 flex-col gap-1.5">
+          <span class="text-ink-faint text-xs font-medium tracking-wide uppercase">Cover photo</span>
+          <UploadWidget
+            kind="covers"
+            :current-url="coverImage?.url"
+            aspect-ratio="16/9"
+            label="cover photo"
+            @uploaded="handleCoverUploaded"
+            @removed="handleCoverRemoved"
+          />
+        </div>
+      </div>
+
+      <span class="text-ink-faint text-xs font-medium tracking-wide uppercase">Gallery</span>
+      <div class="mt-1.5 grid grid-cols-3 gap-3 sm:grid-cols-4">
+        <UploadWidget
+          v-for="image in galleryImages"
+          :key="image.id"
+          kind="gallery"
+          :current-url="image.url"
+          label="gallery photo"
+          @uploaded="(result) => handleGalleryItemUploaded(image.id, result)"
+          @removed="() => handleGalleryItemRemoved(image.id)"
+        />
+        <UploadWidget
+          :key="`gallery-add-${galleryImages.length}`"
+          kind="gallery"
+          :current-url="null"
+          label="gallery photo"
+          @uploaded="handleGalleryAdd"
+        />
+      </div>
+
+      <UAlert
+        v-if="imagesError"
+        color="error"
+        variant="subtle"
+        icon="i-lucide-alert-circle"
+        :description="imagesError"
         class="mt-3"
       />
     </section>

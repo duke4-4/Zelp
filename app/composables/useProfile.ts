@@ -148,3 +148,23 @@ export async function updateProfile(input: ProfileUpdateInput): Promise<ProfileD
   if (error) throw toProfileError(error)
   return mapProfileRow(data)
 }
+
+/**
+ * Updates only the signed-in user's `avatar_url` (Phase 6) — kept separate
+ * from `updateProfile` so uploading/replacing/removing a photo via
+ * `UploadWidget` can save immediately, without needing the rest of the
+ * profile-edit form's fields or its own submit step. RLS restricts this to
+ * `auth.uid() = id`, same as `updateProfile`.
+ */
+export async function updateProfileAvatar(avatarUrl: string | null): Promise<void> {
+  const supabase = useSupabaseClient<Database>()
+  const user = useSupabaseUser()
+  if (!user.value) throw new Error('You need to be signed in to update your profile.')
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+    .eq('id', user.value.id)
+
+  if (error) throw toProfileError(error)
+}

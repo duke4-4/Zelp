@@ -1,6 +1,7 @@
 import type { MaybeRefOrGetter } from 'vue'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database, BusinessStatus, SubscriptionStatus, Json } from '~~/types/database.types'
+import type { Database, BusinessStatus, SubscriptionStatus, Json, BusinessImageKind } from '~~/types/database.types'
+import type { BusinessImageLite } from '~/composables/useBusinesses'
 
 /**
  * Business-owner CRUD + dashboard data access (Phase 5). Unlike
@@ -58,6 +59,8 @@ export interface OwnedBusinessDetail {
   createdAt: string
   updatedAt: string | null
   categoryIds: string[]
+  /** Logo/cover/gallery rows for this business (Phase 6), ordered by `position`. */
+  images: BusinessImageLite[]
 }
 
 /** Editable field set shared by the create and edit forms. Deliberately
@@ -113,7 +116,8 @@ const OWNED_DETAIL_SELECT = `
   id, owner_id, name, slug, description, phone, whatsapp, email, website, address,
   city, province, lat, lng, hours, socials, status, avg_rating, review_count, view_count,
   created_at, updated_at,
-  business_categories(category_id)
+  business_categories(category_id),
+  business_images(id, url, kind, position)
 `
 
 interface RawOwnedListRow {
@@ -153,6 +157,7 @@ interface RawOwnedDetailRow {
   created_at: string
   updated_at: string | null
   business_categories: { category_id: string }[] | null
+  business_images: { id: string, url: string, kind: BusinessImageKind, position: number }[] | null
 }
 
 function mapListRow(row: RawOwnedListRow): OwnedBusinessListItem {
@@ -195,6 +200,7 @@ function mapDetailRow(row: RawOwnedDetailRow): OwnedBusinessDetail {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     categoryIds: (row.business_categories ?? []).map(bc => bc.category_id),
+    images: (row.business_images ?? []).slice().sort((a, b) => a.position - b.position),
   }
 }
 

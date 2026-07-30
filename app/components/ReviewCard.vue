@@ -1,9 +1,10 @@
 <script setup lang="ts">
-// A single review: reviewer initial-avatar (real avatar upload is Phase 6),
-// gold stars, date, comment — plus Edit/Delete, shown only when the review
-// belongs to the signed-in viewer. Edit swaps the card body for
-// `ReviewForm` in edit mode; Delete asks for confirmation inline before
-// calling the mutation (no silent, un-confirmed deletes).
+// A single review: reviewer avatar (real photo when uploaded, otherwise an
+// initial-letter fallback — see ProfileAvatar), gold stars, date, comment —
+// plus Edit/Delete, shown only when the review belongs to the signed-in
+// viewer. Edit swaps the card body for `ReviewForm` in edit mode; Delete
+// asks for confirmation inline before calling the mutation (no silent,
+// un-confirmed deletes).
 
 import type { ReviewItem } from '~/composables/useReviews'
 
@@ -19,10 +20,6 @@ const emit = defineEmits<{
 const user = useSupabaseUser()
 const isOwnReview = computed(() => !!user.value && user.value.id === props.review.userId)
 
-const reviewerInitial = computed(() => {
-  const name = props.review.reviewer.fullName
-  return name ? name.trim().charAt(0).toUpperCase() : '?'
-})
 const reviewerName = computed(() => props.review.reviewer.fullName || 'Zelp user')
 
 const dateFormatter = new Intl.DateTimeFormat('en-ZW', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -65,7 +62,7 @@ async function confirmDelete() {
 
     <template v-else>
       <div class="flex items-center gap-3">
-        <UAvatar :src="review.reviewer.avatarUrl ?? undefined" :text="reviewerInitial" size="md" />
+        <ProfileAvatar :avatar-url="review.reviewer.avatarUrl" :name="reviewerName" size="md" />
         <div class="flex min-w-0 flex-1 flex-col">
           <span class="text-ink text-sm font-medium">{{ reviewerName }}</span>
           <span class="text-ink-faint text-xs tabular-nums">

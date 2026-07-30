@@ -10,11 +10,6 @@ definePageMeta({
 const { data: profile, status } = useMyProfile()
 const pending = computed(() => status.value === 'pending')
 
-const initial = computed(() => {
-  const name = profile.value?.fullName || profile.value?.username
-  return name ? name.trim().charAt(0).toUpperCase() : '?'
-})
-
 const socialEntries = computed(() => {
   const socials = profile.value?.socials
   if (!socials) return []
@@ -40,7 +35,7 @@ useSeoMeta({
     <template v-else-if="profile">
       <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div class="flex items-center gap-4">
-          <UAvatar :src="profile.avatarUrl ?? undefined" :text="initial" size="xl" />
+          <ProfileAvatar :avatar-url="profile.avatarUrl" :name="profile.fullName || profile.username" size="xl" />
           <div class="flex flex-col">
             <h1 class="text-ink text-xl font-semibold">
               {{ profile.fullName || 'Your name isn\'t set yet' }}

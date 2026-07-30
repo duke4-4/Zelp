@@ -28,6 +28,12 @@ if (!business.value) {
 // than letting them submit and hit a policy-violation error.
 const isOwner = computed(() => !!user.value && user.value.id === business.value?.owner?.id)
 
+// Phase 6: `business.images` embeds every kind (logo/cover/gallery) — the
+// "Photos" section below is a customer-facing gallery, so it should only
+// ever show `kind === 'gallery'` rows, not the business's small logo icon
+// or its own cover thumbnail (already used elsewhere, e.g. BusinessCard).
+const galleryPhotos = computed(() => business.value?.images.filter(img => img.kind === 'gallery') ?? [])
+
 const contactLinks = computed(() => {
   const b = business.value!
   return {
@@ -209,7 +215,7 @@ useSeoMeta({
           <h2 class="text-ink mb-3 text-lg font-semibold">
             Photos
           </h2>
-          <ImageGallery :images="business.images" :business-name="business.name" />
+          <ImageGallery :images="galleryPhotos" :business-name="business.name" />
         </section>
 
         <!-- Description -->

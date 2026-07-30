@@ -2,6 +2,9 @@
 const user = useSupabaseUser()
 const { signOut } = useAuth()
 const route = useRoute()
+// Real avatar_url once uploaded (Phase 6); falls back to the email initial
+// via ProfileAvatar while signed out or before it's loaded.
+const { data: myProfile } = useMyProfile()
 
 const signingOut = ref(false)
 
@@ -53,7 +56,7 @@ function isActiveTab(to: string) {
             :content="{ align: 'end' }"
           >
             <UButton variant="ghost" color="neutral" :loading="signingOut">
-              <UAvatar :text="user.email?.charAt(0).toUpperCase() ?? '?'" size="xs" />
+              <ProfileAvatar :avatar-url="myProfile?.avatarUrl" :name="myProfile?.fullName || user.email" size="xs" />
               <span class="max-w-40 truncate">{{ user.email }}</span>
             </UButton>
           </UDropdownMenu>

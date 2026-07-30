@@ -1,10 +1,11 @@
 <script setup lang="ts">
 // Profile edit form + account settings (sign out, change-password link).
-// No avatar upload here — that's Phase 6; the current avatar (or its
-// initial-letter fallback, same pattern as ReviewCard) is shown read-only
-// with a "coming soon" note instead of a broken upload control.
+// Avatar upload (Phase 6) saves immediately via `updateProfileAvatar` on
+// success/removal — independent of the rest of this form's own "Save
+// changes" step, since `avatar_url` isn't one of its fields.
 
 import type { FormError, FormSubmitEvent } from '@nuxt/ui'
+import type { UploadResult } from '~/composables/useUpload'
 
 definePageMeta({
   middleware: 'auth',
@@ -51,10 +52,27 @@ watch(profile, (value) => {
   state.socials = socialsStateFromRecord(value.socials)
 }, { immediate: true })
 
-const initial = computed(() => {
-  const name = profile.value?.fullName || profile.value?.username
-  return name ? name.trim().charAt(0).toUpperCase() : '?'
-})
+const avatarError = ref('')
+
+async function handleAvatarUploaded(result: UploadResult) {
+  avatarError.value = ''
+  try {
+    await updateProfileAvatar(result.url)
+    await refresh()
+  } catch (error) {
+    avatarError.value = error instanceof Error ? error.message : 'Could not save your new photo.'
+  }
+}
+
+async function handleAvatarRemoved() {
+  avatarError.value = ''
+  try {
+    await updateProfileAvatar(null)
+    await refresh()
+  } catch (error) {
+    avatarError.value = error instanceof Error ? error.message : 'Could not remove your photo.'
+  }
+}
 
 const submitError = ref('')
 const successMessage = ref('')
@@ -125,14 +143,31 @@ useSeoMeta({
     </div>
 
     <template v-else>
-      <!-- Avatar (read-only; upload is Phase 6) -->
+      <!-- Avatar upload — saves immediately, independent of the form below. -->
       <div class="mb-8 flex items-center gap-4">
-        <UAvatar :src="profile?.avatarUrl ?? undefined" :text="initial" size="xl" />
+        <UploadWidget
+          kind="avatars"
+          :current-url="profile?.avatarUrl"
+          shape="circle"
+          size-class="size-20"
+          label="profile photo"
+          @uploaded="handleAvatarUploaded"
+          @removed="handleAvatarRemoved"
+        />
         <div class="flex flex-col">
           <span class="text-ink text-sm font-medium">Profile photo</span>
-          <span class="text-ink-faint text-xs">Photo upload is coming soon.</span>
+          <span class="text-ink-faint text-xs">JPEG, PNG, WEBP or GIF, up to 5MB.</span>
         </div>
       </div>
+
+      <UAlert
+        v-if="avatarError"
+        color="error"
+        variant="subtle"
+        icon="i-lucide-alert-circle"
+        :description="avatarError"
+        class="mb-4"
+      />
 
       <UAlert
         v-if="successMessage"
