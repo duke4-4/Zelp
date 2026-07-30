@@ -3,6 +3,11 @@
 // businesses rail. Auth-state UI (signed in as X / log in / sign up) lives
 // entirely in Navbar now — this page doesn't duplicate it.
 
+// Brand-first title on the homepage specifically ("Zelp — tagline" rather
+// than the site-wide "Page — Zelp" template every other page uses) --
+// overriding the template back to a bare `%s` so it isn't doubled up into
+// "Zelp — ... — Zelp".
+useHead({ titleTemplate: '%s' })
 useSeoMeta({
   title: 'Zelp — Discover Zimbabwean Businesses',
   description: 'Find and review trusted businesses across Zimbabwe — restaurants, salons, tradespeople and more, all in one place.',

@@ -172,9 +172,99 @@ function handleReviewChange() {
   void refreshReviewData()
 }
 
+// --- SEO ---------------------------------------------------------------
+// The most SEO-valuable page in the app: real business name/city in the
+// title, a real (truncated) or honestly-generated description, the
+// business's own cover photo as the share image (never a fabricated one),
+// and JSON-LD LocalBusiness structured data built only from fields this
+// business actually has set.
+
+/** Truncates at the last whole word inside `maxLength`, so descriptions
+ * never cut off mid-word -- standard ~155 char budget for a meta
+ * description before search engines start truncating it themselves. */
+function truncateDescription(text: string, maxLength = 155): string {
+  const trimmed = text.trim()
+  if (trimmed.length <= maxLength) return trimmed
+  const cut = trimmed.slice(0, maxLength)
+  const lastSpace = cut.lastIndexOf(' ')
+  return `${cut.slice(0, lastSpace > 0 ? lastSpace : maxLength).trimEnd()}…`
+}
+
+const siteConfig = useSiteConfig()
+const canonicalBusinessUrl = computed(() => business.value
+  ? new URL(`/business/${business.value.slug}`, siteConfig.url).toString()
+  : undefined)
+
 useSeoMeta({
-  title: () => `${business.value?.name ?? 'Business'} — Zelp`,
-  description: () => business.value?.description || `${business.value?.name} on Zelp — Zimbabwean business directory.`,
+  title: () => {
+    const b = business.value
+    if (!b) return 'Business'
+    return b.city ? `${b.name} — ${b.city}` : b.name
+  },
+  description: () => {
+    const b = business.value
+    if (!b) return undefined
+    return b.description
+      ? truncateDescription(b.description)
+      : `See reviews, hours and contact details for ${b.name} on Zelp.`
+  },
+  ogType: 'business.business',
+  ogUrl: canonicalBusinessUrl,
+  // Falls through to the site-wide default (app.vue) when this business has
+  // no cover photo of its own -- computed getters returning `undefined`
+  // don't overwrite a parent-level tag, they simply don't produce one here.
+  ogImage: () => business.value?.coverImageUrl ?? undefined,
+  twitterImage: () => business.value?.coverImageUrl ?? undefined,
+})
+
+useHead({
+  link: [{ rel: 'canonical', href: canonicalBusinessUrl }],
+})
+
+// JSON-LD LocalBusiness -- every field is either a real value from this
+// business's row or omitted entirely. `geo` and `aggregateRating` in
+// particular are only ever included when there's a genuine, non-null value
+// backing them (never a fabricated 0/0 coordinate or a 0-review rating).
+const structuredData = computed(() => {
+  const b = business.value
+  if (!b) return null
+
+  const hasAddressParts = !!(b.address || b.city || b.province)
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: b.name,
+    description: b.description || undefined,
+    url: canonicalBusinessUrl.value,
+    image: b.coverImageUrl || undefined,
+    telephone: b.phone || undefined,
+    address: hasAddressParts
+      ? {
+          '@type': 'PostalAddress',
+          streetAddress: b.address || undefined,
+          addressLocality: b.city || undefined,
+          addressRegion: b.province || undefined,
+          addressCountry: 'ZW',
+        }
+      : undefined,
+    geo: (b.lat !== null && b.lng !== null)
+      ? { '@type': 'GeoCoordinates', latitude: b.lat, longitude: b.lng }
+      : undefined,
+    aggregateRating: b.reviewCount > 0
+      ? { '@type': 'AggregateRating', ratingValue: b.avgRating, reviewCount: b.reviewCount }
+      : undefined,
+  }
+})
+
+useHead({
+  script: [
+    {
+      key: 'business-ld-json',
+      type: 'application/ld+json',
+      innerHTML: () => structuredData.value ? JSON.stringify(structuredData.value) : '',
+    },
+  ],
 })
 </script>
 

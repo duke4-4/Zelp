@@ -4,6 +4,11 @@ import type { FormError, FormSubmitEvent } from '@nuxt/ui'
 // Deliberately no `auth`/`guest` middleware here: this page's whole job is
 // to consume the one-time "recovery" session Supabase establishes from the
 // link in the reset email, which is independent of any normal login state.
+// It's also the one auth page actually excluded from robots.txt crawling
+// (see nuxt.config.ts's `robots.disallow`) on top of the noindex meta tag
+// below -- there's never a legitimate reason for a crawler to fetch a URL
+// that only works with a one-time token appended.
+definePageMeta({ robots: false })
 
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()

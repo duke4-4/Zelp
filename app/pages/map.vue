@@ -13,6 +13,13 @@
 import type { FiltersValue } from '~/components/Filters.vue'
 import type { MapBoundsFilter, MapBusinessFilters } from '~/composables/useBusinesses'
 
+// Noindex: a map view has no unique crawlable content of its own -- every
+// business pin here is already indexable on its own /business/[slug] page,
+// and every filter combination is already indexable via /search. Indexing
+// this page too would just be a near-duplicate of /search for crawlers,
+// with none of the content actually readable as text (it's a canvas map).
+definePageMeta({ robots: false })
+
 const route = useRoute()
 const router = useRouter()
 
@@ -53,7 +60,7 @@ const { data: mapBusinesses, status } = useMapBusinesses(mapFilters)
 const pending = computed(() => status.value === 'pending')
 
 useSeoMeta({
-  title: 'Map — Zelp',
+  title: 'Map',
   description: 'Browse Zimbabwean businesses on the map.',
 })
 

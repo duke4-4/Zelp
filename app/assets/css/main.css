@@ -198,6 +198,29 @@
   opacity: 0;
 }
 
+/* Page/layout transition (nuxt.config.ts's `app.pageTransition` /
+ * `layoutTransition`, name="zelp-page") — a brief-specified 260ms ease-out
+ * fade with a small upward slide, per docs/zelp-ui-prompt.md's motion spec
+ * ("260ms for sheets and page transitions"). The global
+ * `prefers-reduced-motion` rule below already collapses this to an instant
+ * swap for anyone who's asked for reduced motion. */
+.zelp-page-enter-active,
+.zelp-page-leave-active {
+  transition:
+    opacity 260ms ease-out,
+    transform 260ms ease-out;
+}
+
+.zelp-page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.zelp-page-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
 /* Save/heart optimistic pulse — a short scale "pop" the instant a favourite
  * toggle lands on, per docs/reference/zelp-v2-prototype.html's `.save.on`
  * treatment. Purely a visual accent on the already-real optimistic toggle

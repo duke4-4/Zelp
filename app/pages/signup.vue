@@ -3,9 +3,15 @@ import type { FormError, FormSubmitEvent } from '@nuxt/ui'
 
 definePageMeta({
   middleware: 'guest',
+  robots: false,
 })
 
 const { signUp } = useAuth()
+
+useSeoMeta({
+  title: 'Sign up',
+  description: 'Create a free Zelp account.',
+})
 
 const state = reactive({
   email: '',

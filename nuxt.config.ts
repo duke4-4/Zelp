@@ -19,6 +19,11 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      // Per-page useSeoMeta({ title: ... }) calls (every page in
+      // app/pages/ sets one) fill in `%s`; site-wide OG/Twitter/theme
+      // defaults live in app.vue via useSeoMeta so page-level calls can
+      // override them by key.
+      titleTemplate: '%s — Zelp',
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },

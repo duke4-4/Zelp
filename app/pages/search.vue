@@ -36,8 +36,34 @@ const { data: hasAnyBusinesses } = useHasAnyBusinesses()
 const pending = computed(() => status.value === 'pending')
 
 useSeoMeta({
-  title: () => filters.value.q ? `"${filters.value.q}" — Search — Zelp` : 'Search businesses — Zelp',
-  description: 'Search Zimbabwean businesses by name, category, city or rating.',
+  title: () => filters.value.q ? `"${filters.value.q}" — Search` : 'Search businesses',
+  description: () => filters.value.city
+    ? `Browse businesses in ${filters.value.city} on Zelp.`
+    : 'Search Zimbabwean businesses by name, category, city or rating.',
+})
+
+// Canonical: every filter/sort/page combination is a real, distinct result
+// set worth letting crawlers index on its own merits (e.g. "restaurants in
+// Harare" is genuinely different content from bare /search) -- so this
+// self-references the current URL rather than always canonicalizing back to
+// bare /search, which would tell search engines to ignore/merge away all
+// the filtered variants. The one exception is `page`: page 2+ of the same
+// filter set is a near-duplicate of page 1, not new content, so it's
+// dropped from the canonical (pointing page 2 at page 1's canonical URL
+// deliberately). Nuxt Robots / Nuxt Sitemap aren't involved here — this is
+// a plain canonical <link>, not a noindex/robots.txt concern.
+const siteConfig = useSiteConfig()
+const canonicalUrl = computed(() => {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(route.query)) {
+    if (key === 'page' || typeof value !== 'string' || !value) continue
+    params.set(key, value)
+  }
+  const search = params.toString()
+  return new URL(`/search${search ? `?${search}` : ''}`, siteConfig.url).toString()
+})
+useHead({
+  link: [{ rel: 'canonical', href: canonicalUrl }],
 })
 
 /** Merges a patch onto the current route query, dropping empty/undefined values. */

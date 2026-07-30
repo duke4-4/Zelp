@@ -3,6 +3,9 @@ import type { FormError, FormSubmitEvent } from '@nuxt/ui'
 
 definePageMeta({
   middleware: 'guest',
+  // Crawlable (bots can reach and read this page -- no robots.txt Disallow)
+  // but not indexable: an auth form has no SEO value of its own.
+  robots: false,
 })
 
 const route = useRoute()

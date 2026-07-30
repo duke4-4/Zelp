@@ -3,9 +3,15 @@ import type { FormError, FormSubmitEvent } from '@nuxt/ui'
 
 definePageMeta({
   middleware: 'guest',
+  robots: false,
 })
 
 const { requestPasswordReset } = useAuth()
+
+useSeoMeta({
+  title: 'Reset your password',
+  description: 'Request a password reset link for your Zelp account.',
+})
 
 const state = reactive({
   email: '',
