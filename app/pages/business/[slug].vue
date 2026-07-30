@@ -10,6 +10,8 @@
 // "not found" state was known. The trade-off is no skeleton flash here;
 // the page is either fully rendered or a proper 404.
 
+import type { MapBusinessItem } from '~/composables/useBusinesses'
+
 const route = useRoute()
 const slug = computed(() => String(route.params.slug))
 const user = useSupabaseUser()
@@ -81,6 +83,31 @@ function normalizeWhatsappHref(value: string): string {
 const directionsHref = computed(() => locationLine.value
   ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationLine.value)}`
   : null)
+
+// Mini-map (Phase 7) — only rendered when this business actually has real
+// coordinates set (`lat`/`lng` are nullable; most businesses may not have
+// set them yet). Reuses MapView in 'mini' mode with a single-item list
+// rather than building a separate small-map component.
+const mapCenter = computed(() => {
+  const b = business.value
+  return b && b.lat !== null && b.lng !== null ? { lat: b.lat, lng: b.lng } : null
+})
+const mapBusinesses = computed<MapBusinessItem[]>(() => {
+  const b = business.value
+  const center = mapCenter.value
+  if (!b || !center) return []
+  return [{
+    id: b.id,
+    slug: b.slug,
+    name: b.name,
+    lat: center.lat,
+    lng: center.lng,
+    avgRating: b.avgRating,
+    reviewCount: b.reviewCount,
+    coverImageUrl: b.coverImageUrl,
+    categories: b.categories,
+  }]
+})
 
 const actionRow = computed(() => {
   const b = business.value
@@ -303,6 +330,24 @@ useSeoMeta({
       </div>
 
       <div class="flex flex-col gap-6">
+        <!-- Mini-map: only when this business has real coordinates set. -->
+        <section v-if="mapCenter" class="border-line overflow-hidden rounded-[18px] border">
+          <div class="relative h-48 w-full">
+            <MapView :businesses="mapBusinesses" mode="mini" :center="mapCenter" :zoom="14" />
+          </div>
+          <div class="p-3">
+            <UButton
+              label="View on map"
+              icon="i-lucide-map"
+              variant="link"
+              color="neutral"
+              size="sm"
+              to="/map"
+              class="px-0"
+            />
+          </div>
+        </section>
+
         <!-- Contact -->
         <section v-if="hasContactInfo" class="rounded-[18px] border border-line p-4">
           <h2 class="text-ink mb-3 text-lg font-semibold">

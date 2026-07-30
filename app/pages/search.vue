@@ -85,21 +85,7 @@ const emptyStateCopy = computed(() => {
     <div class="zelp-surface mb-6 flex flex-col gap-4 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
       <Filters :model-value="filtersValue" @update:model-value="handleFiltersUpdate" />
 
-      <!-- Placeholder list/map toggle — inert, Phase 7 wires the actual map. -->
-      <div class="border-line bg-surface flex shrink-0 items-center gap-0.5 rounded-full border p-0.5" role="group" aria-label="View">
-        <span class="bg-flame-tint text-flame-500 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium">
-          <UIcon name="i-lucide-list" class="size-4" />
-          List
-        </span>
-        <span
-          class="text-ink-faint flex cursor-not-allowed items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium"
-          aria-disabled="true"
-          title="Map view is coming soon"
-        >
-          <UIcon name="i-lucide-map" class="size-4" />
-          Map
-        </span>
-      </div>
+      <ListMapToggle active="list" :list-to="{ path: '/search', query: route.query }" :map-to="{ path: '/map', query: route.query }" />
     </div>
 
     <p class="text-ink-faint tabular-nums mb-4 text-sm">

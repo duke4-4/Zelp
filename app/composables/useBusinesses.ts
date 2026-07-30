@@ -49,6 +49,10 @@ export interface BusinessDetail extends BusinessListItem {
   viewCount: number
   images: BusinessImageLite[]
   owner: { id: string, fullName: string | null, avatarUrl: string | null } | null
+  /** Real coordinates if this business has set them (Phase 7 mini-map /
+   * directions), null otherwise — never fabricated. */
+  lat: number | null
+  lng: number | null
 }
 
 export type BusinessSort = 'rating' | 'newest'
@@ -107,6 +111,8 @@ interface RawBusinessDetailRow extends RawBusinessListRow {
   view_count: number
   business_images: { id: string, url: string, kind: BusinessImageKind, position: number }[] | null
   owner: { id: string, full_name: string | null, avatar_url: string | null } | null
+  lat: number | null
+  lng: number | null
 }
 
 function pickCoverUrl(images: { url: string, kind: BusinessImageKind, position: number }[] | null): string | null {
@@ -157,6 +163,8 @@ function mapDetailRow(row: RawBusinessDetailRow): BusinessDetail {
     owner: row.owner
       ? { id: row.owner.id, fullName: row.owner.full_name, avatarUrl: row.owner.avatar_url }
       : null,
+    lat: row.lat,
+    lng: row.lng,
   }
 }
 
@@ -309,7 +317,7 @@ export function useBusinessDetail(slug: MaybeRefOrGetter<string>) {
         .from('businesses')
         .select(`
           id, name, slug, description, phone, whatsapp, email, website, address,
-          city, province, hours, socials, avg_rating, review_count, view_count, created_at,
+          city, province, lat, lng, hours, socials, avg_rating, review_count, view_count, created_at,
           business_categories(categories(id, name, slug, icon)),
           business_images(id, url, kind, position),
           owner:profiles!businesses_owner_id_fkey(id, full_name, avatar_url)
@@ -324,6 +332,137 @@ export function useBusinessDetail(slug: MaybeRefOrGetter<string>) {
       return mapDetailRow(data)
     },
     { watch: [() => toValue(slug)] },
+  )
+}
+
+// --- Map (Phase 7) ---
+
+export interface MapBusinessItem {
+  id: string
+  slug: string
+  name: string
+  lat: number
+  lng: number
+  avgRating: number
+  reviewCount: number
+  coverImageUrl: string | null
+  categories: CategoryLite[]
+}
+
+export interface MapBoundsFilter {
+  north: number
+  south: number
+  east: number
+  west: number
+}
+
+export interface MapBusinessFilters {
+  /** Free-text search, matched against name / city / province. */
+  q?: string
+  /** Category slug. */
+  category?: string
+  /** Minimum avg_rating (0-5). */
+  minRating?: number
+  /** Restricts the fetch to businesses whose lat/lng fall inside these
+   * bounds — set from the map's current viewport for the "search this
+   * area" control. Omitted for the initial, unbounded fetch. */
+  bounds?: MapBoundsFilter
+}
+
+interface RawMapBusinessRow {
+  id: string
+  name: string
+  slug: string
+  lat: number | null
+  lng: number | null
+  avg_rating: number
+  review_count: number
+  business_categories: { categories: CategoryLite | null }[] | null
+  business_images: { url: string, kind: BusinessImageKind, position: number }[] | null
+}
+
+// Pragmatic cap on how many pins a single fetch returns. The database may
+// currently have zero businesses with coordinates set at all — this exists
+// purely as a sane ceiling for later, not a real constraint today.
+const MAP_RESULT_LIMIT = 500
+
+/**
+ * Published businesses that have real, non-null lat/lng, for /map — plus
+ * the business detail page's mini-map. Optionally filtered by the same
+ * category/search-term/rating filters /search supports (so linking between
+ * the two views stays consistent) and/or a viewport bounds box for the
+ * "search this area" control. Businesses without coordinates are never
+ * included — there is no fallback/fabricated position.
+ */
+export function useMapBusinesses(filters: MaybeRefOrGetter<MapBusinessFilters>) {
+  const supabase = useSupabaseClient<Database>()
+
+  return useAsyncData(
+    () => `businesses-map:${JSON.stringify(toValue(filters))}`,
+    async () => {
+      const f = toValue(filters)
+
+      // Same inner-embed-for-filtering trick as useBusinessList.
+      const hasCategoryFilter = !!f.category
+      const categoriesEmbed = hasCategoryFilter
+        ? 'business_categories!inner(categories!inner(id, name, slug, icon))'
+        : 'business_categories(categories(id, name, slug, icon))'
+
+      let query = supabase
+        .from('businesses')
+        .select(
+          `id, name, slug, lat, lng, avg_rating, review_count,
+           ${categoriesEmbed},
+           business_images(url, kind, position)`,
+        )
+        .not('lat', 'is', null)
+        .not('lng', 'is', null)
+
+      const term = f.q ? sanitizeSearchTerm(f.q) : ''
+      if (term) {
+        query = query.or(`name.ilike.%${term}%,city.ilike.%${term}%,province.ilike.%${term}%`)
+      }
+      if (hasCategoryFilter) {
+        query = query.eq('business_categories.categories.slug', f.category as string)
+      }
+      if (typeof f.minRating === 'number') query = query.gte('avg_rating', f.minRating)
+      if (f.bounds) {
+        query = query
+          .gte('lat', f.bounds.south)
+          .lte('lat', f.bounds.north)
+          .gte('lng', f.bounds.west)
+          .lte('lng', f.bounds.east)
+      }
+
+      query = query.order('avg_rating', { ascending: false }).limit(MAP_RESULT_LIMIT)
+
+      const { data, error } = await query
+        .overrideTypes<RawMapBusinessRow[], { merge: false }>()
+
+      if (error) throw error
+
+      return (data ?? [])
+        // The `.not(...is.null)` filters above already exclude these at the
+        // DB level — this narrows the TS type to match, it's not a second
+        // filtering pass.
+        .filter((row): row is RawMapBusinessRow & { lat: number, lng: number } => row.lat !== null && row.lng !== null)
+        .map((row): MapBusinessItem => ({
+          id: row.id,
+          slug: row.slug,
+          name: row.name,
+          lat: row.lat,
+          lng: row.lng,
+          avgRating: row.avg_rating,
+          reviewCount: row.review_count,
+          coverImageUrl: pickCoverUrl(row.business_images),
+          categories: mapCategories(row.business_categories),
+        }))
+    },
+    {
+      watch: [() => toValue(filters)],
+      default: () => [] as MapBusinessItem[],
+      lazy: true,
+    },
   )
 }
 

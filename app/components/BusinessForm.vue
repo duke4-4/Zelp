@@ -8,8 +8,14 @@
 // with the result so the caller can navigate.
 //
 // Deliberately NOT included here (out of scope for Phase 5, left for later
-// phases): image upload (business_images — Phase 6), a map picker for
-// lat/lng (Phase 7). Lat/lng are plain numeric inputs for now.
+// phases): image upload (business_images — Phase 6). Lat/lng are plain
+// numeric inputs, now with a "use my current location" button (Phase 7,
+// once real geolocation/map capability existed to build it on top of) that
+// fills them from the browser's Geolocation API. A full interactive
+// map-based pin-drop picker (dragging a marker on an embedded MapView to
+// set lat/lng) would be a nice future enhancement, but is real added scope
+// (embedding an editable map, reverse-syncing marker drag <-> form state)
+// beyond a small Phase 7 addition — left for later rather than rushed here.
 
 import type { FormError, FormSubmitEvent } from '@nuxt/ui'
 import type { OwnedBusinessDetail } from '~/composables/useOwnedBusinesses'
@@ -117,6 +123,41 @@ const state = reactive({
 
 const submitting = ref(false)
 const errorMessage = ref('')
+
+// --- "Use my current location" (Phase 7) ---
+// One-shot on-demand fetch (`immediate: false`) — this never asks for the
+// permission until the owner explicitly clicks the button.
+const { coords: geoCoords, error: geoError, resume: resumeGeolocation } = useGeolocation({ immediate: false })
+const locatingMe = ref(false)
+const geoErrorMessage = ref('')
+
+watch(geoCoords, (coords) => {
+  if (!locatingMe.value) return
+  if (!Number.isFinite(coords.latitude) || !Number.isFinite(coords.longitude)) return
+  // Rounded to ~11cm precision — plenty for a business location pin, and
+  // avoids dumping the browser's full float precision into the field.
+  state.lat = Math.round(coords.latitude * 1e6) / 1e6
+  state.lng = Math.round(coords.longitude * 1e6) / 1e6
+  locatingMe.value = false
+})
+
+watch(geoError, (error) => {
+  if (!error) return
+  locatingMe.value = false
+  geoErrorMessage.value = error.code === 1 // GeolocationPositionError.PERMISSION_DENIED
+    ? 'Location access was denied. You can still enter coordinates manually.'
+    : 'Could not detect your location. You can still enter coordinates manually.'
+})
+
+function handleUseMyLocation() {
+  if (!navigator.geolocation) {
+    geoErrorMessage.value = 'Your browser doesn\'t support location detection.'
+    return
+  }
+  geoErrorMessage.value = ''
+  locatingMe.value = true
+  resumeGeolocation()
+}
 
 const categoryItems = computed(() => (categories.value ?? []).map(category => ({ label: category.name, value: category.id })))
 
@@ -257,12 +298,32 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
       </div>
 
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <UFormField label="Latitude" name="lat" hint="Optional — a map picker is coming in a later phase">
+        <UFormField label="Latitude" name="lat" hint="Optional">
           <UInput v-model.number="state.lat" type="number" step="any" placeholder="-17.8292" class="w-full" :disabled="submitting" />
         </UFormField>
         <UFormField label="Longitude" name="lng" hint="Optional">
           <UInput v-model.number="state.lng" type="number" step="any" placeholder="31.0522" class="w-full" :disabled="submitting" />
         </UFormField>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <UButton
+          label="Use my current location"
+          icon="i-lucide-locate-fixed"
+          variant="outline"
+          color="neutral"
+          size="sm"
+          class="self-start"
+          :loading="locatingMe"
+          :disabled="submitting"
+          @click="handleUseMyLocation"
+        />
+        <p v-if="geoErrorMessage" class="text-closed-500 text-xs">
+          {{ geoErrorMessage }}
+        </p>
+        <p class="text-ink-faint text-xs">
+          Sets latitude/longitude from your device's current location — useful when you're standing at the business.
+        </p>
       </div>
     </section>
 
