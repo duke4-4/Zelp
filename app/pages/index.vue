@@ -15,9 +15,11 @@ useSeoMeta({
 
 const { data: categories, status: categoriesStatus, refresh: refreshCategories } = useCategories()
 const { data: recentBusinesses, status: recentStatus, refresh: refreshRecent } = useBusinessList({ sort: 'newest', pageSize: 8 })
+const { data: mapBusinesses, status: mapStatus } = useMapBusinesses({})
 
 const categoriesPending = computed(() => categoriesStatus.value === 'pending')
 const recentPending = computed(() => recentStatus.value === 'pending')
+const mapPending = computed(() => mapStatus.value === 'pending')
 // `status === 'error'` (not just an empty `data`) is what actually tells a
 // genuine "nothing here yet" apart from a failed fetch -- both of these
 // composables default to an empty array/result on error (so the page never
@@ -87,14 +89,12 @@ const recentErrored = computed(() => recentStatus.value === 'error')
         description="We're still setting up business categories — check back shortly."
       />
 
-      <!-- Category rail: horizontal scroll on all sizes so it reads like a
-           rail rather than a dense grid, per the brief's Airbnb-style shell. -->
-      <div v-else class="flex snap-x gap-3 overflow-x-auto pb-2">
+      <div v-else class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
         <ULink
           v-for="category in categories"
           :key="category.id"
           :to="{ path: '/search', query: { category: category.slug } }"
-          class="group flex w-[88px] shrink-0 snap-start flex-col items-center gap-2 pb-2 text-center"
+          class="group flex flex-col items-center gap-2 text-center"
         >
           <span class="bg-surface text-flame-500 border-line flex size-[68px] items-center justify-center rounded-[22px] border shadow-[var(--shadow-resting)] transition group-hover:-translate-y-0.5 group-hover:border-flame-500">
             <UIcon :name="category.icon || 'i-lucide-shapes'" class="size-6" />
@@ -103,6 +103,28 @@ const recentErrored = computed(() => recentStatus.value === 'error')
             {{ category.name }}
           </span>
         </ULink>
+      </div>
+    </section>
+
+    <!-- Live map preview: the real interactive map, shown immediately --
+         it doesn't wait on businesses to have set a location. -->
+    <section class="zelp-container pb-10 sm:pb-14">
+      <div class="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <p class="zelp-kicker mb-1">See it on the map</p>
+          <h2 class="zelp-section-title">Explore Zimbabwe</h2>
+        </div>
+        <UButton to="/map" variant="ghost" trailing-icon="i-lucide-arrow-right" label="Open full map" />
+      </div>
+
+      <div class="relative h-72 w-full overflow-hidden rounded-[18px] border border-line sm:h-96">
+        <MapView :businesses="mapBusinesses" :pending="mapPending" mode="mini" />
+        <UButton
+          to="/map"
+          label="Open full map"
+          icon="i-lucide-maximize-2"
+          class="absolute right-4 bottom-4 z-10 shadow-[var(--shadow-floating)]"
+        />
       </div>
     </section>
 

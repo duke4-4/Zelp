@@ -87,17 +87,16 @@ function handleSearchThisArea(bounds: MapBoundsFilter) {
 
 const listHref = computed(() => ({ path: '/search', query: route.query }))
 
-// Two distinct "nothing to show" states:
-//  - Unbounded fetch (no area search active) returned zero -> a real empty
-//    state replacing the map entirely: genuinely no businesses in Zelp have
-//    a location set (matching the current filters, if any).
-//  - An area search returned zero -> the map itself is still useful (the
-//    user can pan elsewhere), so it stays on screen with a small banner
-//    instead of losing the map.
-const showFullEmptyState = computed(() => !pending.value && !hasSearchedArea.value && mapBusinesses.value.length === 0)
-const areaEmptyMessage = computed(() => {
-  if (pending.value || !hasSearchedArea.value || mapBusinesses.value.length > 0) return null
-  return 'No businesses with a location in this area.'
+// The interactive map itself is always shown -- Zimbabwe is real and worth
+// exploring immediately, it shouldn't wait on businesses adding locations.
+// "Nothing to show" only ever surfaces as a small overlay banner on top of
+// the live map (via MapView's own emptyBannerMessage), never by hiding the
+// map entirely.
+const emptyBannerMessage = computed(() => {
+  if (pending.value || mapBusinesses.value.length > 0) return null
+  return hasSearchedArea.value
+    ? 'No businesses with a location in this area yet.'
+    : 'No businesses have added their location yet -- explore the map below, or browse the list.'
 })
 </script>
 
@@ -114,22 +113,11 @@ const areaEmptyMessage = computed(() => {
       <ListMapToggle active="map" :list-to="listHref" :map-to="{ path: '/map', query: route.query }" />
     </div>
 
-    <EmptyState
-      v-if="showFullEmptyState"
-      icon="i-lucide-map-pin-off"
-      title="No businesses with a location set yet"
-      description="Once businesses add their coordinates, they'll show up here on the map."
-    >
-      <template #actions>
-        <UButton label="Browse the list instead" variant="outline" color="neutral" :to="listHref" />
-      </template>
-    </EmptyState>
-
-    <div v-else class="relative h-[70vh] min-h-[460px] w-full overflow-hidden rounded-[18px] border border-line">
+    <div class="relative h-[70vh] min-h-[460px] w-full overflow-hidden rounded-[18px] border border-line">
       <MapView
         :businesses="mapBusinesses"
         :pending="pending"
-        :empty-banner-message="areaEmptyMessage"
+        :empty-banner-message="emptyBannerMessage"
         @search-this-area="handleSearchThisArea"
       />
     </div>
