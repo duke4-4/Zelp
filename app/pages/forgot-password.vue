@@ -8,11 +8,6 @@ definePageMeta({
 
 const { requestPasswordReset } = useAuth()
 
-useSeoMeta({
-  title: 'Reset your password',
-  description: 'Request a password reset link for your Zelp account.',
-})
-
 const state = reactive({
   email: '',
 })
@@ -44,6 +39,11 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
     loading.value = false
   }
 }
+
+useSeoMeta({
+  title: 'Reset your password',
+  description: 'Request a password reset link for your Zelp account.',
+})
 </script>
 
 <template>

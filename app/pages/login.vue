@@ -45,6 +45,11 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
     loading.value = false
   }
 }
+
+useSeoMeta({
+  title: 'Log in',
+  description: 'Log in to your Zelp account.',
+})
 </script>
 
 <template>

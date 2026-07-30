@@ -8,11 +8,6 @@ definePageMeta({
 
 const { signUp } = useAuth()
 
-useSeoMeta({
-  title: 'Sign up',
-  description: 'Create a free Zelp account.',
-})
-
 const state = reactive({
   email: '',
   password: '',
@@ -62,6 +57,11 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
     loading.value = false
   }
 }
+
+useSeoMeta({
+  title: 'Sign up',
+  description: 'Create a free Zelp account.',
+})
 </script>
 
 <template>
