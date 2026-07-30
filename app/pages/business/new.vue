@@ -78,7 +78,7 @@ useSeoMeta({
       Your listing starts as a draft — you'll be able to review it and request publishing once it's ready.
     </p>
 
-    <section class="border-line mb-8 rounded-[18px] border p-4">
+    <section class="border-line bg-surface mb-8 rounded-[18px] border p-5">
       <h2 class="text-ink mb-1 text-sm font-semibold">
         Photos
       </h2>

@@ -8,14 +8,16 @@
 // with the result so the caller can navigate.
 //
 // Deliberately NOT included here (out of scope for Phase 5, left for later
-// phases): image upload (business_images — Phase 6). Lat/lng are plain
-// numeric inputs, now with a "use my current location" button (Phase 7,
-// once real geolocation/map capability existed to build it on top of) that
-// fills them from the browser's Geolocation API. A full interactive
-// map-based pin-drop picker (dragging a marker on an embedded MapView to
-// set lat/lng) would be a nice future enhancement, but is real added scope
-// (embedding an editable map, reverse-syncing marker drag <-> form state)
-// beyond a small Phase 7 addition — left for later rather than rushed here.
+// phases): image upload (business_images — Phase 6, actually lives on the
+// /business/new and /business/edit/[id] pages around this form, not in it).
+//
+// Lat/lng are plain numeric inputs (kept — some owners will always know
+// their exact coordinates and typing them is faster than panning a map),
+// plus a "use my current location" button (fills them from the browser's
+// Geolocation API), plus a LocationPicker map (drag/click a pin). All
+// three write to the same state.lat/state.lng and stay in sync with each
+// other — see LocationPicker.vue for how the map <-> form-state two-way
+// sync avoids feeding back into itself.
 
 import type { FormError, FormSubmitEvent } from '@nuxt/ui'
 import type { OwnedBusinessDetail } from '~/composables/useOwnedBusinesses'
@@ -159,6 +161,15 @@ function handleUseMyLocation() {
   resumeGeolocation()
 }
 
+// --- Map picker (dragging/clicking the LocationPicker pin) ---
+// Sets both fields from a single event so lat/lng always change together,
+// same as the geolocation handler above — never a partial update where
+// only one of the two is momentarily out of sync with the other.
+function handleLocationPicked(location: { lat: number, lng: number }) {
+  state.lat = location.lat
+  state.lng = location.lng
+}
+
 const categoryItems = computed(() => (categories.value ?? []).map(category => ({ label: category.name, value: category.id })))
 
 function validate(formState: typeof state): FormError[] {
@@ -225,7 +236,7 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
 <template>
   <UForm :state="state" :validate="validate" class="flex flex-col gap-8" @submit="onSubmit">
     <!-- Basic info -->
-    <section class="flex flex-col gap-4">
+    <section class="flex flex-col gap-4 rounded-[18px] border border-line bg-surface p-5">
       <h2 class="text-ink text-lg font-semibold">
         Basic info
       </h2>
@@ -257,7 +268,7 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
     </section>
 
     <!-- Contact -->
-    <section class="flex flex-col gap-4">
+    <section class="flex flex-col gap-4 rounded-[18px] border border-line bg-surface p-5">
       <h2 class="text-ink text-lg font-semibold">
         Contact
       </h2>
@@ -279,7 +290,7 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
     </section>
 
     <!-- Location -->
-    <section class="flex flex-col gap-4">
+    <section class="flex flex-col gap-4 rounded-[18px] border border-line bg-surface p-5">
       <h2 class="text-ink text-lg font-semibold">
         Location
       </h2>
@@ -306,6 +317,24 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
         </UFormField>
       </div>
 
+      <!-- Map picker — an alternative to typing coordinates, not a
+           replacement: dragging/clicking the pin here and editing the
+           Latitude/Longitude fields above both update the same
+           state.lat/state.lng, kept in sync in both directions by
+           LocationPicker itself. Degrades to a plain "unavailable"
+           message on its own if NUXT_PUBLIC_MAPBOX_TOKEN isn't set. -->
+      <div class="flex flex-col gap-1.5">
+        <span class="text-ink-faint text-xs font-medium tracking-wide uppercase">Or drop a pin</span>
+        <div class="h-64 w-full sm:h-72">
+          <LocationPicker
+            :lat="state.lat"
+            :lng="state.lng"
+            :disabled="submitting"
+            @update:location="handleLocationPicked"
+          />
+        </div>
+      </div>
+
       <div class="flex flex-col gap-1.5">
         <UButton
           label="Use my current location"
@@ -328,16 +357,16 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
     </section>
 
     <!-- Hours -->
-    <section class="flex flex-col gap-4">
+    <section class="flex flex-col gap-4 rounded-[18px] border border-line bg-surface p-5">
       <h2 class="text-ink text-lg font-semibold">
         Hours
       </h2>
 
-      <div class="flex flex-col rounded-[18px] border border-line px-4">
+      <div class="flex flex-col divide-y divide-line">
         <div
           v-for="day in DAYS"
           :key="day.key"
-          class="grid grid-cols-[88px_1fr] items-center gap-x-3 gap-y-2 border-b border-line py-3.5 last:border-b-0 sm:grid-cols-[96px_1fr_auto]"
+          class="grid grid-cols-[88px_1fr] items-center gap-x-3 gap-y-2 py-3.5 first:pt-0 last:pb-0 sm:grid-cols-[96px_1fr_auto]"
         >
           <span class="text-ink text-sm font-medium">{{ day.label }}</span>
 
@@ -356,7 +385,7 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
     </section>
 
     <!-- Socials -->
-    <section class="flex flex-col gap-4">
+    <section class="flex flex-col gap-4 rounded-[18px] border border-line bg-surface p-5">
       <h2 class="text-ink text-lg font-semibold">
         Social links
       </h2>
