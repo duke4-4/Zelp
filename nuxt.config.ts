@@ -33,6 +33,10 @@ export default defineNuxtConfig({
   },
 
   colorMode: {
+    // Light by default for first-time visitors (the brand is explicitly
+    // "no dark-mode-by-default") -- the Navbar toggle lets users switch to
+    // dark, and that explicit choice persists via the module's own
+    // cookie/localStorage on later visits.
     preference: 'light',
     fallback: 'light',
   },

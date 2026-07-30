@@ -50,6 +50,7 @@ function isActiveTab(to: string) {
       <div class="hidden items-center gap-1 sm:flex">
         <UButton to="/search" variant="ghost" color="neutral" label="Explore" icon="i-lucide-compass" />
         <UButton to="/business/new" variant="ghost" color="neutral" label="List a business" />
+        <UColorModeButton variant="ghost" color="neutral" aria-label="Toggle dark mode" />
         <template v-if="user">
           <UDropdownMenu
             :items="[[{ label: 'Profile', icon: 'i-lucide-user', to: '/profile' }], [{ label: 'Log out', icon: 'i-lucide-log-out', onSelect: handleSignOut }]]"
