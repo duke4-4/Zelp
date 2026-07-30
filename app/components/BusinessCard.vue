@@ -13,6 +13,12 @@ const favourited = computed(() => isFavourited(props.business.id))
 const favError = ref('')
 let favErrorTimer: ReturnType<typeof setTimeout> | undefined
 
+// A short scale "pop" on the already-real optimistic toggle in useFavourites
+// — pure visual polish, no new logic. Only pulses on save (not un-save),
+// matching the reference's `.save.on` treatment.
+const justSaved = ref(false)
+let pulseTimer: ReturnType<typeof setTimeout> | undefined
+
 // Requires sign-in (redirects to /login, preserving the current page so the
 // visitor lands back here) rather than silently failing for anon visitors.
 // Once signed in, the toggle itself is optimistic (see useFavourites) with
@@ -26,9 +32,15 @@ async function handleSaveClick(event: MouseEvent) {
     return
   }
 
+  const wasFavourited = favourited.value
   favError.value = ''
   try {
     await toggle(props.business.id)
+    if (!wasFavourited) {
+      justSaved.value = true
+      clearTimeout(pulseTimer)
+      pulseTimer = setTimeout(() => { justSaved.value = false }, 420)
+    }
   } catch (error) {
     favError.value = error instanceof Error ? error.message : 'Could not update favorites.'
     clearTimeout(favErrorTimer)
@@ -61,6 +73,7 @@ async function handleSaveClick(event: MouseEvent) {
         :aria-label="favourited ? 'Remove from favorites' : 'Save to favorites'"
         :aria-pressed="favourited"
         class="bg-surface/90 text-ink absolute top-2.5 right-2.5 flex size-8 items-center justify-center rounded-full shadow-[var(--shadow-resting)] transition hover:scale-105"
+        :class="justSaved ? 'zelp-save-pulse' : ''"
         @click="handleSaveClick"
       >
         <UIcon name="i-lucide-heart" class="size-4" :class="favourited ? 'text-flame-500 fill-current' : ''" />

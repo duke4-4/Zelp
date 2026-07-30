@@ -46,7 +46,7 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
 
 <template>
   <div class="mx-auto flex min-h-[calc(100vh-16rem)] max-w-md flex-col justify-center gap-6 px-5 py-12">
-    <BrandStripe class="w-full opacity-80" />
+    <FlagLine class="w-full" />
 
     <div class="text-center">
       <h1 class="text-2xl font-semibold">

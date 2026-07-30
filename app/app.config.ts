@@ -42,5 +42,11 @@ export default defineAppConfig({
         content: 'rounded-[18px]',
       },
     },
+    // Directional shimmer sweep instead of the default opacity pulse — see
+    // `.zelp-skeleton-shimmer` in main.css. Single-slot component (not
+    // `slots: { base }`), applied everywhere USkeleton is used.
+    skeleton: {
+      base: 'zelp-skeleton-shimmer',
+    },
   },
 })

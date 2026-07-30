@@ -272,15 +272,24 @@ async function onSubmit(event: FormSubmitEvent<typeof state>) {
         Hours
       </h2>
 
-      <div class="flex flex-col divide-y divide-line rounded-[18px] border border-line">
-        <div v-for="day in DAYS" :key="day.key" class="flex flex-wrap items-center gap-3 p-3">
-          <span class="text-ink w-24 shrink-0 text-sm font-medium">{{ day.label }}</span>
-          <UCheckbox v-model="state.hours[day.key].closed" label="Closed" :disabled="submitting" />
-          <template v-if="!state.hours[day.key].closed">
-            <UInput v-model="state.hours[day.key].open" type="time" size="sm" :disabled="submitting" />
-            <span class="text-ink-faint text-sm">to</span>
-            <UInput v-model="state.hours[day.key].close" type="time" size="sm" :disabled="submitting" />
-          </template>
+      <div class="flex flex-col rounded-[18px] border border-line px-4">
+        <div
+          v-for="day in DAYS"
+          :key="day.key"
+          class="grid grid-cols-[88px_1fr] items-center gap-x-3 gap-y-2 border-b border-line py-3.5 last:border-b-0 sm:grid-cols-[96px_1fr_auto]"
+        >
+          <span class="text-ink text-sm font-medium">{{ day.label }}</span>
+
+          <div class="col-span-2 flex flex-wrap items-center gap-3 sm:col-span-1">
+            <template v-if="!state.hours[day.key].closed">
+              <UInput v-model="state.hours[day.key].open" type="time" size="sm" :disabled="submitting" />
+              <span class="text-ink-faint text-sm">to</span>
+              <UInput v-model="state.hours[day.key].close" type="time" size="sm" :disabled="submitting" />
+            </template>
+            <span v-else class="text-ink-faint text-sm">—</span>
+          </div>
+
+          <UCheckbox v-model="state.hours[day.key].closed" label="Closed" :disabled="submitting" class="justify-self-start sm:justify-self-end" />
         </div>
       </div>
     </section>

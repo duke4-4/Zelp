@@ -52,6 +52,74 @@ const subscriptionLabel = computed(() => {
   return labels[subStatus] ?? subStatus
 })
 
+// --- Views chart: real `business_views` rows grouped by day (see
+// useBusinessDashboardStats), rendered as a small inline sparkline on the
+// stat card plus a bigger day-by-day bar chart below. Both must degrade to
+// an honest flat/zero state rather than imply activity that didn't happen.
+const viewCounts = computed(() => stats.value.viewsLast7Days.map(d => d.count))
+const hasAnyRecentViews = computed(() => viewCounts.value.some(v => v > 0))
+
+const sparklinePoints = computed(() => {
+  const vals = viewCounts.value
+  if (vals.length < 2) return ''
+  const w = 100
+  const h = 26
+  const mx = Math.max(...vals)
+  const mn = Math.min(...vals)
+  const range = (mx - mn) || 1
+  return vals
+    .map((v, i) => {
+      const x = (i / (vals.length - 1)) * w
+      const y = h - 2 - ((v - mn) / range) * (h - 6)
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    })
+    .join(' ')
+})
+
+function barHeightPx(count: number): string {
+  const mx = Math.max(...viewCounts.value)
+  if (mx <= 0) return '6px'
+  return `${Math.max(6, (count / mx) * 118)}px`
+}
+
+// --- "Needs your attention": only real, derivable conditions — never
+// invented/unverifiable nudges. Each links straight to where it's fixed.
+interface AttentionItem {
+  key: string
+  title: string
+  description: string
+  actionLabel: string
+  to: string
+}
+
+const attentionItems = computed<AttentionItem[]>(() => {
+  const business = selectedBusiness.value
+  if (!business) return []
+  const items: AttentionItem[] = []
+
+  if (business.reviewCount === 0) {
+    items.push({
+      key: 'no-reviews',
+      title: 'No reviews yet',
+      description: 'New listings take a little time to earn their first review — share your Zelp page with customers.',
+      actionLabel: 'View listing',
+      to: `/business/${business.slug}`,
+    })
+  }
+
+  if (!business.description || !business.description.trim()) {
+    items.push({
+      key: 'no-description',
+      title: 'Your description is empty',
+      description: 'A short description helps people decide to visit before they even see a review.',
+      actionLabel: 'Add one',
+      to: `/business/edit/${business.id}`,
+    })
+  }
+
+  return items
+})
+
 useSeoMeta({
   title: () => selectedBusiness.value ? `${selectedBusiness.value.name} dashboard — Zelp` : 'Business dashboard — Zelp',
 })
@@ -117,18 +185,28 @@ useSeoMeta({
       </div>
 
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div class="rounded-[18px] border border-line p-4">
-          <p class="text-ink-faint text-xs font-medium tracking-wide uppercase">
+        <div class="zelp-surface p-4">
+          <p class="text-ink-faint text-[11px] font-semibold tracking-[0.06em] uppercase">
             Views
           </p>
           <p class="text-ink mt-1 text-2xl font-semibold tabular-nums">
             <USkeleton v-if="statsPending" class="bg-ink-100 h-7 w-12" />
             <template v-else>{{ stats.viewCount }}</template>
           </p>
+          <svg
+            v-if="!statsPending && sparklinePoints"
+            class="text-flame-400 mt-2 h-6 w-full"
+            viewBox="0 0 100 26"
+            preserveAspectRatio="none"
+            role="img"
+            aria-label="Views over the last 7 days"
+          >
+            <polyline :points="sparklinePoints" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
         </div>
 
-        <div class="rounded-[18px] border border-line p-4">
-          <p class="text-ink-faint text-xs font-medium tracking-wide uppercase">
+        <div class="zelp-surface p-4">
+          <p class="text-ink-faint text-[11px] font-semibold tracking-[0.06em] uppercase">
             Reviews
           </p>
           <p class="text-ink mt-1 text-2xl font-semibold tabular-nums">
@@ -136,8 +214,8 @@ useSeoMeta({
           </p>
         </div>
 
-        <div class="rounded-[18px] border border-line p-4">
-          <p class="text-ink-faint text-xs font-medium tracking-wide uppercase">
+        <div class="zelp-surface p-4">
+          <p class="text-ink-faint text-[11px] font-semibold tracking-[0.06em] uppercase">
             Avg rating
           </p>
           <div class="mt-1.5">
@@ -145,14 +223,67 @@ useSeoMeta({
           </div>
         </div>
 
-        <div class="rounded-[18px] border border-line p-4">
-          <p class="text-ink-faint text-xs font-medium tracking-wide uppercase">
+        <div class="zelp-surface p-4">
+          <p class="text-ink-faint text-[11px] font-semibold tracking-[0.06em] uppercase">
             Subscription
           </p>
           <p class="text-ink mt-1 text-sm font-medium">
             <USkeleton v-if="statsPending" class="bg-ink-100 h-5 w-20" />
             <template v-else>{{ subscriptionLabel }}</template>
           </p>
+        </div>
+      </div>
+
+      <!-- Profile views — real business_views rows grouped by day, an
+           honest flat/zero state when there's no view history yet. -->
+      <div class="zelp-surface mt-6 p-5">
+        <div class="mb-4 flex items-baseline justify-between gap-3">
+          <h2 class="text-ink text-base font-semibold">
+            Profile views
+          </h2>
+          <span class="text-ink-faint text-xs">Last 7 days</span>
+        </div>
+
+        <div v-if="statsPending" class="flex h-[140px] items-end gap-3">
+          <USkeleton v-for="i in 7" :key="i" class="bg-ink-100 h-full w-full" />
+        </div>
+
+        <template v-else>
+          <div class="flex h-[140px] items-end gap-2 sm:gap-3">
+            <div v-for="day in stats.viewsLast7Days" :key="day.date" class="flex flex-1 flex-col items-center gap-1.5">
+              <span class="text-ink-faint text-[11px] tabular-nums">{{ day.count }}</span>
+              <div
+                class="w-full rounded-t-[6px]"
+                :class="hasAnyRecentViews ? 'bg-flame-400' : 'bg-ink-100'"
+                :style="{ height: barHeightPx(day.count) }"
+              />
+              <span class="text-ink-faint text-[11px] uppercase">{{ day.label }}</span>
+            </div>
+          </div>
+          <p v-if="!hasAnyRecentViews" class="text-ink-faint mt-3 text-center text-xs">
+            Not enough data yet
+          </p>
+        </template>
+      </div>
+
+      <!-- Needs your attention — only real, derivable nudges. -->
+      <div v-if="!statsPending && attentionItems.length" class="mt-8">
+        <h2 class="text-ink mb-3 text-base font-semibold">
+          Needs your attention
+        </h2>
+        <div class="flex flex-col gap-2">
+          <div v-for="item in attentionItems" :key="item.key" class="zelp-surface flex items-start gap-3 p-3.5">
+            <span class="bg-flame-500 mt-1.5 size-2 shrink-0 rounded-full" aria-hidden="true" />
+            <div class="flex-1">
+              <p class="text-ink text-sm font-medium">
+                {{ item.title }}
+              </p>
+              <p class="text-ink-muted text-xs">
+                {{ item.description }}
+              </p>
+            </div>
+            <UButton :to="item.to" :label="item.actionLabel" variant="ghost" color="neutral" size="xs" class="shrink-0" />
+          </div>
         </div>
       </div>
 

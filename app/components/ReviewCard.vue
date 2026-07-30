@@ -64,43 +64,38 @@ async function confirmDelete() {
     />
 
     <template v-else>
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <UAvatar :src="review.reviewer.avatarUrl ?? undefined" :text="reviewerInitial" size="md" />
-          <div class="flex flex-col">
-            <span class="text-ink text-sm font-medium">{{ reviewerName }}</span>
-            <span class="text-ink-faint text-xs">
-              {{ formattedDate }}
-              <template v-if="wasEdited"> · edited</template>
-            </span>
-          </div>
+      <div class="flex items-center gap-3">
+        <UAvatar :src="review.reviewer.avatarUrl ?? undefined" :text="reviewerInitial" size="md" />
+        <div class="flex min-w-0 flex-1 flex-col">
+          <span class="text-ink text-sm font-medium">{{ reviewerName }}</span>
+          <span class="text-ink-faint text-xs tabular-nums">
+            {{ formattedDate }}
+            <template v-if="wasEdited"> · edited</template>
+          </span>
         </div>
-
-        <div v-if="isOwnReview && !isConfirmingDelete" class="flex shrink-0 items-center gap-1">
-          <UButton
-            icon="i-lucide-pencil"
-            variant="ghost"
-            color="neutral"
-            size="xs"
-            aria-label="Edit your review"
-            @click="isEditing = true"
-          />
-          <UButton
-            icon="i-lucide-trash-2"
-            variant="ghost"
-            color="neutral"
-            size="xs"
-            aria-label="Delete your review"
-            @click="isConfirmingDelete = true"
-          />
-        </div>
+        <RatingStars :rating="review.rating" size="sm" class="shrink-0" />
       </div>
 
-      <RatingStars :rating="review.rating" size="sm" />
-
-      <p v-if="review.comment" class="text-ink-muted text-sm whitespace-pre-line">
+      <p v-if="review.comment" class="text-ink-muted text-sm leading-relaxed whitespace-pre-line">
         {{ review.comment }}
       </p>
+
+      <div v-if="isOwnReview && !isConfirmingDelete" class="flex items-center gap-4 text-xs font-semibold">
+        <button
+          type="button"
+          class="text-ink-faint hover:text-flame-500 transition-colors"
+          @click="isEditing = true"
+        >
+          Edit
+        </button>
+        <button
+          type="button"
+          class="text-ink-faint hover:text-flame-500 transition-colors"
+          @click="isConfirmingDelete = true"
+        >
+          Delete
+        </button>
+      </div>
 
       <UAlert
         v-if="deleteError"

@@ -222,7 +222,7 @@ useSeoMeta({
           </p>
         </section>
 
-        <BrandStripe />
+        <FlagLine />
 
         <!--
           `avgRating` / `reviewCount` above already come from

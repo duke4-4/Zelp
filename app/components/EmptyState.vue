@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // Generic empty state used across the app: no categories yet, no search
-// results, no reviews, etc. One of the three sanctioned uses of the chevron
-// frieze pattern (docs/zelp-brand-guidelines.md) — a decorative band above
-// the copy, never behind text.
+// results, no reviews, etc. One of the sanctioned uses of the flagline
+// motif (see app/components/FlagLine.vue) — a decorative band above the
+// copy, never behind text. Replaces the old chevron-frieze pattern here.
 
 withDefaults(defineProps<{
   icon?: string
@@ -16,7 +16,7 @@ withDefaults(defineProps<{
 
 <template>
   <div class="flex flex-col items-center gap-4 py-12 text-center">
-    <BrandStripe class="w-36" />
+    <FlagLine class="w-36" />
 
     <slot name="icon">
       <UIcon :name="icon" class="text-ink-faint size-8" />

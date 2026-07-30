@@ -58,9 +58,7 @@ useSeoMeta({
       <!-- Marketing CTA — always shown when the owner has zero listings; a
            lighter-weight "add another" prompt otherwise. -->
       <div v-else class="flex flex-col items-center gap-5 py-12 text-center">
-        <div class="h-6 w-40 overflow-hidden rounded-full" aria-hidden="true">
-          <img src="/brand/zelp-pattern-chevron.svg" alt="" class="h-full w-full object-cover">
-        </div>
+        <FlagLine class="w-40" />
 
         <UIcon name="i-lucide-store" class="text-flame-500 size-10" />
 

@@ -198,6 +198,54 @@
   opacity: 0;
 }
 
+/* Save/heart optimistic pulse — a short scale "pop" the instant a favourite
+ * toggle lands on, per docs/reference/zelp-v2-prototype.html's `.save.on`
+ * treatment. Purely a visual accent on the already-real optimistic toggle
+ * in useFavourites; not used to indicate an in-flight/pending state. */
+@keyframes zelp-save-pulse {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.zelp-save-pulse {
+  animation: zelp-save-pulse 420ms ease-out;
+}
+
+/* Skeleton shimmer sweep — replaces Nuxt UI's default opacity `animate-pulse`
+ * with a directional highlight sweep (docs/reference/zelp-v2-prototype.html's
+ * `.sk`/`.sk::after`), applied globally via app.config.ts's `ui.skeleton`
+ * override so every async surface (feeds, search, dashboard stats, etc.)
+ * gets it without touching each skeleton component individually. */
+.zelp-skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  /* Hard-override Nuxt UI's default `animate-pulse` utility regardless of
+   * CSS layer/cascade order — the sweep below is what should animate. */
+  animation: none !important;
+}
+
+.zelp-skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: zelp-skeleton-shimmer-sweep 1.4s ease infinite;
+}
+
+@keyframes zelp-skeleton-shimmer-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

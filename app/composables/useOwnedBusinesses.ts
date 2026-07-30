@@ -29,6 +29,9 @@ export interface OwnedBusinessListItem {
   avgRating: number
   reviewCount: number
   createdAt: string
+  /** Included so the dashboard's "needs your attention" nudges (e.g. "add a
+   * description") can be derived from real data without a second fetch. */
+  description: string | null
 }
 
 export interface OwnedBusinessDetail {
@@ -77,9 +80,22 @@ export interface BusinessFormInput {
   categoryIds: string[]
 }
 
+/** One day's worth of real `business_views` rows, for the dashboard's views
+ * sparkline/bar chart. `label` is a short weekday abbreviation for display;
+ * `date` is the underlying `YYYY-MM-DD` (UTC) bucket key. */
+export interface DashboardDayCount {
+  date: string
+  label: string
+  count: number
+}
+
 export interface BusinessDashboardStats {
   viewCount: number
   subscriptionStatus: SubscriptionStatus | null
+  /** Real `business_views` rows for this business, grouped by UTC day,
+   * oldest to newest, always exactly 7 entries (zero-filled for days with
+   * no views — never fabricated). */
+  viewsLast7Days: DashboardDayCount[]
 }
 
 /** Display metadata for a business's `status`, shared by the owner-facing
@@ -92,7 +108,7 @@ export const BUSINESS_STATUS_META: Record<BusinessStatus, { label: string, color
   suspended: { label: 'Suspended', color: 'error' },
 }
 
-const OWNED_LIST_SELECT = 'id, name, slug, status, city, province, avg_rating, review_count, created_at'
+const OWNED_LIST_SELECT = 'id, name, slug, status, city, province, avg_rating, review_count, created_at, description'
 const OWNED_DETAIL_SELECT = `
   id, owner_id, name, slug, description, phone, whatsapp, email, website, address,
   city, province, lat, lng, hours, socials, status, avg_rating, review_count, view_count,
@@ -110,6 +126,7 @@ interface RawOwnedListRow {
   avg_rating: number
   review_count: number
   created_at: string
+  description: string | null
 }
 
 interface RawOwnedDetailRow {
@@ -149,6 +166,7 @@ function mapListRow(row: RawOwnedListRow): OwnedBusinessListItem {
     avgRating: row.avg_rating,
     reviewCount: row.review_count,
     createdAt: row.created_at,
+    description: row.description,
   }
 }
 
@@ -422,6 +440,25 @@ export async function setBusinessStatus(id: string, status: Extract<BusinessStat
   if (error) throw toBusinessError(error)
 }
 
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+/** Builds the 7 UTC day buckets (oldest to newest, today last) the views
+ * chart always renders, zero-filled before any real rows are counted in. */
+function buildEmptyDayCounts(): DashboardDayCount[] {
+  const days: DashboardDayCount[] = []
+  const now = new Date()
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+    d.setUTCDate(d.getUTCDate() - i)
+    days.push({
+      date: d.toISOString().slice(0, 10),
+      label: WEEKDAY_LABELS[d.getUTCDay()]!,
+      count: 0,
+    })
+  }
+  return days
+}
+
 /**
  * Dashboard stats not already carried on the business row itself
  * (`avg_rating` / `review_count` / `status` — see `OwnedBusinessListItem` /
@@ -433,6 +470,11 @@ export async function setBusinessStatus(id: string, status: Extract<BusinessStat
  *    `null` if the business has never had one ("No active subscription").
  *    Phase 8 hasn't built the purchase flow yet, so `null` is the expected,
  *    genuine state for every business right now — never faked here.
+ *  - `viewsLast7Days`: real `business_views.viewed_at` rows from the last 7
+ *    UTC days, grouped by day client-side (Supabase JS has no group-by
+ *    aggregate). Always 7 zero-filled buckets so the chart has an honest,
+ *    flat "no data" shape rather than an empty/collapsed one when a
+ *    business has no recent views — never fabricated.
  */
 export function useBusinessDashboardStats(businessId: MaybeRefOrGetter<string>) {
   const supabase = useSupabaseClient<Database>()
@@ -441,26 +483,40 @@ export function useBusinessDashboardStats(businessId: MaybeRefOrGetter<string>) 
     () => `business-dashboard-stats:${toValue(businessId)}`,
     async () => {
       const id = toValue(businessId)
+      const emptyDays = buildEmptyDayCounts()
       if (!id) {
-        return { viewCount: 0, subscriptionStatus: null } satisfies BusinessDashboardStats
+        return { viewCount: 0, subscriptionStatus: null, viewsLast7Days: emptyDays } satisfies BusinessDashboardStats
       }
 
-      const [viewsResult, subscriptionResult] = await Promise.all([
+      const since = new Date(`${emptyDays[0]!.date}T00:00:00.000Z`)
+
+      const [viewsResult, subscriptionResult, recentViewsResult] = await Promise.all([
         supabase.from('business_views').select('id', { count: 'exact', head: true }).eq('business_id', id),
         supabase.from('subscriptions').select('status').eq('business_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('business_views').select('viewed_at').eq('business_id', id).gte('viewed_at', since.toISOString()),
       ])
 
       if (viewsResult.error) throw viewsResult.error
       if (subscriptionResult.error) throw subscriptionResult.error
+      if (recentViewsResult.error) throw recentViewsResult.error
+
+      const dayIndex = new Map(emptyDays.map((day, i) => [day.date, i]))
+      const viewsLast7Days = emptyDays.map(day => ({ ...day }))
+      for (const row of recentViewsResult.data ?? []) {
+        const key = row.viewed_at.slice(0, 10)
+        const i = dayIndex.get(key)
+        if (i !== undefined) viewsLast7Days[i]!.count += 1
+      }
 
       return {
         viewCount: viewsResult.count ?? 0,
         subscriptionStatus: subscriptionResult.data?.status ?? null,
+        viewsLast7Days,
       } satisfies BusinessDashboardStats
     },
     {
       watch: [() => toValue(businessId)],
-      default: (): BusinessDashboardStats => ({ viewCount: 0, subscriptionStatus: null }),
+      default: (): BusinessDashboardStats => ({ viewCount: 0, subscriptionStatus: null, viewsLast7Days: buildEmptyDayCounts() }),
       lazy: true,
     },
   )

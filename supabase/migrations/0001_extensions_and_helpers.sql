@@ -18,3 +18,4 @@
 -- enabled already, but we make it explicit so the schema is portable to a
 -- fresh Postgres instance.
 create extension if not exists pgcrypto;
+
