@@ -17,11 +17,10 @@ const recentPending = computed(() => recentStatus.value === 'pending')
 
 <template>
   <div>
-    <!-- Discovery-first hero: large location-led search. Solid ink backdrop
-         (no stock/decorative photography — nothing here should imply real
-         business photos exist until businesses actually upload their own). -->
-    <section class="relative overflow-hidden border-b border-line bg-gradient-to-br from-ink-900 to-ink-800">
-      <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,theme(colors.flame.700/25%),transparent_55%)]" aria-hidden="true" />
+    <!-- Discovery-first hero: large location-led search over real,
+         locally-hosted photography of places across Zimbabwe. -->
+    <section class="relative overflow-hidden border-b border-line">
+      <HeroSlideshow />
       <div class="relative z-10 mx-auto flex max-w-6xl flex-col items-start gap-6 px-5 py-14 text-left sm:py-24">
         <p class="border-stone/60 bg-ink-900/40 rounded-full border px-3 py-1 text-xs font-medium tracking-[0.12em] text-stone uppercase">
           Explore nearby
