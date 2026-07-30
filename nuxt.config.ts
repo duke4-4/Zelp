@@ -11,6 +11,8 @@ export default defineNuxtConfig({
     '@nuxtjs/supabase',
     '@vueuse/nuxt',
     '@vite-pwa/nuxt',
+    '@nuxtjs/sitemap',
+    '@nuxtjs/robots',
   ],
 
   css: ['~/assets/css/main.css'],
@@ -30,6 +32,14 @@ export default defineNuxtConfig({
         { name: 'apple-mobile-web-app-title', content: 'Zelp' },
       ],
     },
+    // Brand motion spec (see app/assets/css/main.css's own 180ms ease-out
+    // splash transition): a short fade+slight-slide between routes.
+    // `main.css`'s global `prefers-reduced-motion` rule already collapses
+    // every `transition-duration` to ~0, so this degrades to an instant,
+    // non-animated swap for users who've asked for reduced motion --
+    // nothing extra to wire up here for that.
+    pageTransition: { name: 'zelp-page', mode: 'out-in' },
+    layoutTransition: { name: 'zelp-page', mode: 'out-in' },
   },
 
   colorMode: {
@@ -62,6 +72,60 @@ export default defineNuxtConfig({
       // Overridden by NUXT_PUBLIC_MAPBOX_TOKEN at runtime.
       mapboxToken: '',
     },
+  },
+
+  // Canonical origin for SEO plumbing (robots.txt, sitemap.xml, canonical
+  // links, OpenGraph absolute URLs) -- shared by @nuxtjs/sitemap and
+  // @nuxtjs/robots via the underlying nuxt-site-config module. Override with
+  // NUXT_PUBLIC_SITE_URL once a production domain is live; the fallback
+  // below is just so `nuxi build`/typecheck have *something* absolute to
+  // resolve against locally, it's never shown as app content.
+  site: {
+    url: process.env.NUXT_PUBLIC_SITE_URL || 'https://zelp.co.zw',
+    name: 'Zelp',
+  },
+
+  // Static routes plus every real published business (added dynamically by
+  // server/api/__sitemap__/urls.ts, auto-discovered by this module) --
+  // never hardcoded or fabricated entries. Pages that are private
+  // (auth-gated) or intentionally noindex (auth flows, /map) are excluded
+  // here too, so the sitemap only ever lists pages actually worth indexing.
+  sitemap: {
+    exclude: [
+      '/login',
+      '/signup',
+      '/forgot-password',
+      '/reset-password',
+      '/map',
+      '/profile',
+      '/profile/edit',
+      '/favorites',
+      '/business',
+      '/business/new',
+      '/business/dashboard',
+      '/business/edit/**',
+    ],
+  },
+
+  // robots.txt: block crawling of anything auth-gated outright (saves crawl
+  // budget and keeps those URLs out of search engine logs entirely); the
+  // login/signup/forgot-password/reset-password auth pages are left
+  // crawlable here (see their own `robots: noindex` meta tag in each page)
+  // since that's the combination that actually lets a crawler see and obey
+  // the noindex tag, rather than fighting it via robots.txt alone.
+  // `/business$` (exact match only, via the trailing `$`) targets just the
+  // bare owner hub -- NOT the `/business/<slug>` detail pages, which must
+  // stay crawlable.
+  robots: {
+    disallow: [
+      '/profile',
+      '/favorites',
+      '/business/dashboard',
+      '/business/new',
+      '/business/edit',
+      '/reset-password',
+      '/business$',
+    ],
   },
 
   // Installable PWA: lets users add Zelp to their home screen / desktop
