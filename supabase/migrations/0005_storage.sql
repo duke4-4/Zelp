@@ -20,10 +20,12 @@ insert into storage.buckets (id, name, public)
 values ('uploads', 'uploads', true)
 on conflict (id) do nothing;
 
--- storage.objects already has RLS enabled by default on Supabase projects;
--- this is included for idempotency / portability to a fresh Postgres
--- instance and is a no-op if already enabled.
-alter table storage.objects enable row level security;
+-- storage.objects already has RLS enabled by default on every Supabase
+-- project, and the table is owned by the internal `supabase_storage_admin`
+-- role — not the `postgres` role the SQL editor runs as — so re-issuing
+-- `alter table storage.objects enable row level security` here fails with
+-- "must be owner of table objects". Policies can still be created directly
+-- (Supabase grants `postgres` the privileges needed for that specifically).
 
 drop policy if exists "uploads_public_read" on storage.objects;
 create policy "uploads_public_read"
